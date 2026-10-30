@@ -1,9 +1,5 @@
-from project_sniffer.tracing.python.calls import (
-    resolve_python_calls,
-)
-from project_sniffer.tracing.python.imports import (
-    resolve_python_imports,
-)
+from project_sniffer.tracing.python.calls import resolve_python_calls
+from project_sniffer.tracing.python.imports import resolve_python_imports
 
 
 __all__ = [
