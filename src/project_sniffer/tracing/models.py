@@ -11,22 +11,14 @@ from project_sniffer.parsing import (
 )
 
 
-class ImportResolutionStatus(
-    str,
-    Enum,
-):
+class ImportResolutionStatus(str, Enum):
     RESOLVED_INTERNAL = "resolved_internal"
     UNRESOLVED = "unresolved"
     AMBIGUOUS = "ambiguous"
-    INVALID_RELATIVE_IMPORT = (
-        "invalid_relative_import"
-    )
+    INVALID_RELATIVE_IMPORT = "invalid_relative_import"
 
 
-class CallResolutionStatus(
-    str,
-    Enum,
-):
+class CallResolutionStatus(str, Enum):
     RESOLVED_INTERNAL = "resolved_internal"
     POTENTIAL_INTERNAL = "potential_internal"
     SHADOWED = "shadowed"
@@ -34,33 +26,21 @@ class CallResolutionStatus(
     AMBIGUOUS = "ambiguous"
     DYNAMIC = "dynamic"
 
-class CallResolutionProof(
-    str,
-    Enum,
-):
-    INTERNAL_IMPORT_BINDING = (
-        "internal_import_binding"
-    )
 
-    SAME_FILE_STABLE_BINDING = (
-        "same_file_stable_binding"
-    )
+class CallResolutionProof(str, Enum):
+    INTERNAL_IMPORT_BINDING = "internal_import_binding"
 
-    INTERNAL_MODULE_ATTRIBUTE_BINDING = (
-        "internal_module_attribute_binding"
-    )
+    SAME_FILE_STABLE_BINDING = "same_file_stable_binding"
 
-    SAME_FILE_CLASS_ATTRIBUTE_BINDING = (
-        "same_file_class_attribute_binding"
-    )
+    INTERNAL_MODULE_ATTRIBUTE_BINDING = "internal_module_attribute_binding"
+
+    SAME_FILE_CLASS_ATTRIBUTE_BINDING = "same_file_class_attribute_binding"
 
     INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING = (
         "internal_imported_class_attribute_binding"
     )
 
-    LOCAL_INSTANCE_CONSTRUCTOR_BINDING = (
-        "local_instance_constructor_binding"
-    )
+    LOCAL_INSTANCE_CONSTRUCTOR_BINDING = "local_instance_constructor_binding"
     SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING = (
         "same_file_inherited_class_attribute_binding"
     )
@@ -69,14 +49,10 @@ class CallResolutionProof(
         "internal_imported_inherited_class_attribute_binding"
     )
 
-    LOCAL_INSTANCE_INHERITED_METHOD_BINDING = (
-        "local_instance_inherited_method_binding"
-    )
+    LOCAL_INSTANCE_INHERITED_METHOD_BINDING = "local_instance_inherited_method_binding"
 
-class CallShadowReason(
-    str,
-    Enum,
-):
+
+class CallShadowReason(str, Enum):
     PARAMETER = "parameter"
     ASSIGNMENT = "assignment"
     IMPORT = "import"
@@ -84,10 +60,8 @@ class CallShadowReason(
     FREE = "free"
     LOCAL = "local"
 
-class DependencyKind(
-    str,
-    Enum,
-):
+
+class DependencyKind(str, Enum):
     IMPORT = "import"
     CALL = "call"
 
@@ -115,10 +89,7 @@ class CallResolution:
     source_path: str
     evidence: CallEvidence
     status: CallResolutionStatus
-    candidate_targets: tuple[
-        CallTarget,
-        ...,
-    ] = ()
+    candidate_targets: tuple[CallTarget, ...] = ()
     resolved_target: CallTarget | None = None
     proof: CallResolutionProof | None = None
     shadowed_by: CallShadowReason | None = None
@@ -132,28 +103,17 @@ class DependencyEdge:
     kind: DependencyKind
     line: int
     scope: str | None
-    resolution: (
-        ImportResolution
-        | CallResolution
-    )
+    resolution: ImportResolution | CallResolution
     target_symbol: str | None = None
 
 
 @dataclass(frozen=True)
 class DependencyGraph:
     nodes: tuple[str, ...]
-    import_resolutions: tuple[
-        ImportResolution,
-        ...,
-    ]
-    call_resolutions: tuple[
-        CallResolution,
-        ...,
-    ]
-    edges: tuple[
-        DependencyEdge,
-        ...,
-    ]
+    import_resolutions: tuple[ImportResolution, ...]
+    call_resolutions: tuple[CallResolution, ...]
+    edges: tuple[DependencyEdge, ...]
+
 
 @dataclass(frozen=True)
 class CallEndpoint:
@@ -164,19 +124,10 @@ class CallEndpoint:
 @dataclass(frozen=True)
 class CallIndexEntry:
     endpoint: CallEndpoint
-    edges: tuple[
-        DependencyEdge,
-        ...,
-    ]
+    edges: tuple[DependencyEdge, ...]
 
 
 @dataclass(frozen=True)
 class CallIndex:
-    outbound: tuple[
-        CallIndexEntry,
-        ...,
-    ]
-    inbound: tuple[
-        CallIndexEntry,
-        ...,
-    ]
+    outbound: tuple[CallIndexEntry, ...]
+    inbound: tuple[CallIndexEntry, ...]
