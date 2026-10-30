@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from project_sniffer.tracing.call_index import (
-    build_call_index,
-)
+from project_sniffer.tracing.call_index import build_call_index
 from project_sniffer.tracing.models import (
     CallEndpoint,
     CallResolution,
@@ -13,49 +11,33 @@ from project_sniffer.tracing.models import (
     DependencyKind,
 )
 
-def _requested_label(
-    resolution: ImportResolution,
-) -> str:
+def _requested_label(resolution: ImportResolution) -> str:
     if not resolution.requested_modules:
         return "<none>"
 
-    return ", ".join(
-        resolution.requested_modules
-    )
+    return ", ".join(resolution.requested_modules)
 
 
-def _candidate_label(
-    resolution: ImportResolution,
-) -> str:
+def _candidate_label(resolution: ImportResolution) -> str:
     if not resolution.candidate_paths:
         return "<none>"
 
-    return ", ".join(
-        resolution.candidate_paths
-    )
+    return ", ".join(resolution.candidate_paths)
 
 
-def _call_label(
-    resolution: CallResolution,
-) -> str:
+def _call_label(resolution: CallResolution) -> str:
     if not resolution.evidence.target_parts:
         return "<dynamic>"
 
-    return ".".join(
-        resolution.evidence.target_parts
-    )
+    return ".".join(resolution.evidence.target_parts)
 
-def _dynamic_call_kind_label(
-    resolution: CallResolution,
-) -> str:
+def _dynamic_call_kind_label(resolution: CallResolution) -> str:
     if resolution.dynamic_kind is None:
         return "unknown"
 
     return resolution.dynamic_kind.value
 
-def _call_candidate_label(
-    resolution: CallResolution,
-) -> str:
+def _call_candidate_label(resolution: CallResolution) -> str:
     if not resolution.candidate_targets:
         return "<none>"
 
@@ -64,129 +46,84 @@ def _call_candidate_label(
             f"{target.source_path}"
             f"::{target.qualified_name}"
         )
-        for target
-        in resolution.candidate_targets
+        for target in resolution.candidate_targets
     )
 
 
-def _scope_label(
-    scope: str | None,
-) -> str:
+def _scope_label(scope: str | None) -> str:
     if scope is None:
         return "<module>"
 
     return scope
 
-def _call_endpoint_label(
-    endpoint: CallEndpoint,
-) -> str:
+def _call_endpoint_label(endpoint: CallEndpoint) -> str:
     return (
         f"{endpoint.path}::"
         f"{_scope_label(endpoint.symbol)}"
     )
 
-def render_dependency_graph(
-    graph: DependencyGraph,
-) -> str:
+def render_dependency_graph(graph: DependencyGraph) -> str:
     resolved = tuple(
         item
         for item in graph.import_resolutions
-        if (
-            item.status
-            is ImportResolutionStatus.RESOLVED_INTERNAL
-        )
+        if item.status is ImportResolutionStatus.RESOLVED_INTERNAL
     )
 
     unresolved = tuple(
         item
         for item in graph.import_resolutions
-        if (
-            item.status
-            is ImportResolutionStatus.UNRESOLVED
-        )
+        if item.status is ImportResolutionStatus.UNRESOLVED
     )
 
     ambiguous = tuple(
         item
         for item in graph.import_resolutions
-        if (
-            item.status
-            is ImportResolutionStatus.AMBIGUOUS
-        )
+        if item.status is ImportResolutionStatus.AMBIGUOUS
     )
 
     invalid_relative = tuple(
         item
         for item in graph.import_resolutions
-        if (
-            item.status
-            is ImportResolutionStatus.INVALID_RELATIVE_IMPORT
-        )
+        if item.status is ImportResolutionStatus.INVALID_RELATIVE_IMPORT
     )
 
     resolved_calls = tuple(
         item
         for item in graph.call_resolutions
-        if (
-            item.status
-            is (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            )
-        )
+        if item.status is CallResolutionStatus.RESOLVED_INTERNAL
     )
 
     potential_calls = tuple(
         item
         for item in graph.call_resolutions
-        if (
-            item.status
-            is (
-                CallResolutionStatus
-                .POTENTIAL_INTERNAL
-            )
-        )
+        if item.status is CallResolutionStatus.POTENTIAL_INTERNAL
     )
 
     shadowed_calls = tuple(
         item
         for item in graph.call_resolutions
-        if (
-            item.status
-            is CallResolutionStatus.SHADOWED
-        )
+        if item.status is CallResolutionStatus.SHADOWED
     )
 
     unresolved_calls = tuple(
         item
         for item in graph.call_resolutions
-        if (
-            item.status
-            is CallResolutionStatus.UNRESOLVED
-        )
+        if item.status is CallResolutionStatus.UNRESOLVED
     )
 
     ambiguous_calls = tuple(
         item
         for item in graph.call_resolutions
-        if (
-            item.status
-            is CallResolutionStatus.AMBIGUOUS
-        )
+        if item.status is CallResolutionStatus.AMBIGUOUS
     )
 
     dynamic_calls = tuple(
         item
         for item in graph.call_resolutions
-        if (
-            item.status
-            is CallResolutionStatus.DYNAMIC
-        )
+        if item.status is CallResolutionStatus.DYNAMIC
     )
 
-    call_index = build_call_index(
-        graph
-    )
+    call_index = build_call_index(graph)
 
     lines = [
         "# Dependency Trace",
