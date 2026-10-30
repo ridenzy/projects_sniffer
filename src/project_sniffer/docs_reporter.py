@@ -4,15 +4,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from project_sniffer.config import (
-    IgnoreConfig,
-)
-from project_sniffer.evidence import (
-    build_source_evidence,
-)
-from project_sniffer.reading import (
-    read_manifest_files,
-)
+from project_sniffer.config import IgnoreConfig
+from project_sniffer.evidence import build_source_evidence
+from project_sniffer.reading import read_manifest_files
 from project_sniffer.report_builder import (
     ReportBuildSummary,
     build_report,
@@ -45,15 +39,10 @@ class DocumentationReportsSummary:
     private: DocumentationScopeSummary
 
     @property
-    def generated_reports(
-        self,
-    ) -> int:
+    def generated_reports(self) -> int:
         return sum(
             item.report_summary is not None
-            for item in (
-                self.public,
-                self.private,
-            )
+            for item in (self.public, self.private)
         )
 
 
@@ -64,14 +53,8 @@ def _assert_scope_path_safe(
 ) -> Path:
     current = project_root
 
-    for part in (
-        "docs",
-        scope_name,
-    ):
-        current = (
-            current
-            / part
-        )
+    for part in ("docs", scope_name):
+        current = current / part
 
         if current.is_symlink():
             raise DocsReportError(
@@ -91,10 +74,7 @@ def _validate_report_destination(
             f"be a symlink: {report_path}"
         )
 
-    if (
-        report_path.exists()
-        and not report_path.is_file()
-    ):
+    if report_path.exists() and not report_path.is_file():
         raise DocsReportError(
             "documentation report output exists "
             "but is not a regular file: "
@@ -107,37 +87,24 @@ def _scope_ignore_match(
     ignore: IgnoreConfig,
     source_label: str,
 ) -> str | None:
-    matcher = IgnoreMatcher.from_config(
-        ignore
-    )
+    matcher = IgnoreMatcher.from_config(ignore)
 
-    parts = PurePosixPath(
-        source_label
-    ).parts
+    parts = PurePosixPath(source_label).parts
 
     current_parts: list[str] = []
 
     for part in parts:
-        current_parts.append(
-            part
-        )
+        current_parts.append(part)
 
-        relative_path = "/".join(
-            current_parts
-        )
+        relative_path = "/".join(current_parts)
 
-        if matcher.matches_folder(
-            part,
-            relative_path,
-        ):
+        if matcher.matches_folder(part, relative_path):
             return relative_path
 
     return None
 
 
-def _empty_manifest(
-    scope_path: Path,
-) -> ScanManifest:
+def _empty_manifest(scope_path: Path) -> ScanManifest:
     return ScanManifest(
         project_path=scope_path.resolve(),
         directories=(),
@@ -156,15 +123,10 @@ def _build_scope_report(
         Callable[[], bool] | None
     ) = None,
 ) -> DocumentationScopeSummary:
-    source_label = (
-        f"docs/{scope_name}"
-    )
+    source_label = f"docs/{scope_name}"
 
-    scope_path = (
-        _assert_scope_path_safe(
-            project_root=project_root,
-            scope_name=scope_name,
-        )
+    scope_path = _assert_scope_path_safe(
+        project_root=project_root, scope_name=scope_name
     )
 
     if not scope_path.exists():
@@ -184,46 +146,26 @@ def _build_scope_report(
             f"not a directory: {scope_path}"
         )
 
-    report_path = (
-        output_directory
-        / (
-            f"{project_name}-"
-            f"{scope_name}-docs-report.md"
-        )
+    report_path = output_directory / f"{project_name}-{scope_name}-docs-report.md"
+
+    matched_ignore_path = _scope_ignore_match(
+        ignore=ignore, source_label=source_label
     )
 
-    matched_ignore_path = (
-        _scope_ignore_match(
-            ignore=ignore,
-            source_label=source_label,
-        )
-    )
-
-    ignored_by_config = (
-        matched_ignore_path is not None
-    )
+    ignored_by_config = matched_ignore_path is not None
 
     private_scope_ignore = (
-        scope_name == "private"
-        and matched_ignore_path
-        == source_label
+        scope_name == "private" and matched_ignore_path == source_label
     )
 
     ignore_overridden = False
 
     if private_scope_ignore:
-        if (
-            confirm_private_ignore_override
-            is not None
-        ):
-            ignore_overridden = (
-                confirm_private_ignore_override()
-            )
+        if confirm_private_ignore_override is not None:
+            ignore_overridden = confirm_private_ignore_override()
 
         if not ignore_overridden:
-            _validate_report_destination(
-                report_path
-            )
+            _validate_report_destination(report_path)
 
             if report_path.exists():
                 report_path.unlink()
@@ -242,9 +184,7 @@ def _build_scope_report(
         ignored_by_config
         and not ignore_overridden
     ):
-        manifest = _empty_manifest(
-            scope_path
-        )
+        manifest = _empty_manifest(scope_path)
 
     else:
         manifest = scan_project(
@@ -257,19 +197,11 @@ def _build_scope_report(
             ignore_path_prefix=source_label,
         )
 
-    read_results = read_manifest_files(
-        manifest
-    )
+    read_results = read_manifest_files(manifest)
 
-    source_evidence = (
-        build_source_evidence(
-            read_results
-        )
-    )
+    source_evidence = build_source_evidence(read_results)
 
-    _validate_report_destination(
-        report_path
-    )
+    _validate_report_destination(report_path)
 
     report_summary = build_report(
         project_path=project_root,
@@ -280,9 +212,7 @@ def _build_scope_report(
             "Documentation Report"
         ),
         project_name=project_name,
-        source_root_label=(
-            f"{source_label}/"
-        ),
+        source_root_label=f"{source_label}/",
         print_summary=False,
     )
 
@@ -306,38 +236,25 @@ def build_documentation_reports(
         Callable[[], bool] | None
     ) = None,
 ) -> DocumentationReportsSummary:
-    project_root = (
-        project_path
-        .expanduser()
-        .resolve()
+    project_root = project_path.expanduser().resolve()
+
+    project_name = project_root.name or "root"
+
+    public_summary = _build_scope_report(
+        project_root=project_root,
+        project_name=project_name,
+        output_directory=output_directory,
+        ignore=ignore,
+        scope_name="public",
     )
 
-    project_name = (
-        project_root.name
-        or "root"
-    )
-
-    public_summary = (
-        _build_scope_report(
-            project_root=project_root,
-            project_name=project_name,
-            output_directory=output_directory,
-            ignore=ignore,
-            scope_name="public",
-        )
-    )
-
-    private_summary = (
-        _build_scope_report(
-            project_root=project_root,
-            project_name=project_name,
-            output_directory=output_directory,
-            ignore=ignore,
-            scope_name="private",
-            confirm_private_ignore_override=(
-                confirm_private_ignore_override
-            ),
-        )
+    private_summary = _build_scope_report(
+        project_root=project_root,
+        project_name=project_name,
+        output_directory=output_directory,
+        ignore=ignore,
+        scope_name="private",
+        confirm_private_ignore_override=confirm_private_ignore_override,
     )
 
     return DocumentationReportsSummary(
