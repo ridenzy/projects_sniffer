@@ -4,22 +4,14 @@ import os
 import stat
 from pathlib import Path
 
-from project_sniffer.reading.models import (
-    FileReadResult,
-    FileReadStatus,
-)
-from project_sniffer.scanning.models import (
-    ScanManifest,
-    ScannedFile,
-)
+from project_sniffer.reading.models import FileReadResult, FileReadStatus
+from project_sniffer.scanning.models import ScanManifest, ScannedFile
 
 
 DEFAULT_MAX_SOURCE_BYTES = 8 * 1024 * 1024
 
 
-def _validate_max_source_bytes(
-    max_source_bytes: int,
-) -> int:
+def _validate_max_source_bytes(max_source_bytes: int) -> int:
     if (
         isinstance(
             max_source_bytes,
@@ -38,12 +30,8 @@ def _validate_max_source_bytes(
     return max_source_bytes
 
 
-def _is_valid_text_char(
-    char: str,
-) -> bool:
-    codepoint = ord(
-        char
-    )
+def _is_valid_text_char(char: str) -> bool:
+    codepoint = ord(char)
 
     return (
         codepoint == 0x09
@@ -55,28 +43,12 @@ def _is_valid_text_char(
     )
 
 
-def _clean_text(
-    text: str,
-) -> str:
-    return "".join(
-        char
-        for char in text
-        if _is_valid_text_char(
-            char
-        )
-    )
+def _clean_text(text: str) -> str:
+    return "".join(char for char in text if _is_valid_text_char(char))
 
 
-def _lexical_absolute_path(
-    path: Path,
-) -> Path:
-    return Path(
-        os.path.abspath(
-            os.fspath(
-                path
-            )
-        )
-    )
+def _lexical_absolute_path(path: Path) -> Path:
+    return Path(os.path.abspath(os.fspath(path)))
 
 
 def _is_within_project(
@@ -120,9 +92,7 @@ def read_scanned_file(
     *,
     project_path: Path,
     scanned_file: ScannedFile,
-    max_source_bytes: int = (
-        DEFAULT_MAX_SOURCE_BYTES
-    ),
+    max_source_bytes: int = DEFAULT_MAX_SOURCE_BYTES,
 ) -> FileReadResult:
     """
     Safely classify and read one discovered file.
@@ -133,30 +103,14 @@ def read_scanned_file(
     classified without loading their full content into memory.
     """
 
-    max_source_bytes = (
-        _validate_max_source_bytes(
-            max_source_bytes
-        )
-    )
+    max_source_bytes = _validate_max_source_bytes(max_source_bytes)
 
-    project_root = (
-        project_path
-        .expanduser()
-        .resolve()
-    )
+    project_root = project_path.expanduser().resolve()
 
-    candidate = (
-        _lexical_absolute_path(
-            scanned_file.absolute_path
-        )
-    )
+    candidate = _lexical_absolute_path(scanned_file.absolute_path)
 
     try:
-        lexical_relative = (
-            candidate.relative_to(
-                project_root
-            )
-        )
+        lexical_relative = candidate.relative_to(project_root)
     except ValueError:
         return _result(
             scanned_file=scanned_file,
@@ -287,18 +241,14 @@ def read_scanned_file(
         with resolved_path.open(
             "rb"
         ) as file_handle:
-            size_bytes = os.fstat(
-                file_handle.fileno()
-            ).st_size
+            size_bytes = os.fstat(file_handle.fileno()).st_size
 
             sample_limit = min(
                 2048,
                 max_source_bytes + 1,
             )
 
-            sample = file_handle.read(
-                sample_limit
-            )
+            sample = file_handle.read(sample_limit)
 
             if b"\x00" in sample:
                 return _result(
@@ -320,21 +270,13 @@ def read_scanned_file(
                     size_bytes=size_bytes,
                 )
 
-            remaining_limit = (
-                max_source_bytes
-                + 1
-                - len(sample)
-            )
+            remaining_limit = max_source_bytes + 1 - len(sample)
 
-            remainder = file_handle.read(
-                remaining_limit
-            )
+            remainder = file_handle.read(remaining_limit)
 
             data = sample + remainder
 
-            observed_size = os.fstat(
-                file_handle.fileno()
-            ).st_size
+            observed_size = os.fstat(file_handle.fileno()).st_size
 
     except OSError as error:
         return _result(
@@ -370,12 +312,7 @@ def read_scanned_file(
             size_bytes=size_bytes,
         )
 
-    content = _clean_text(
-        data.decode(
-            "utf-8",
-            errors="ignore",
-        )
-    )
+    content = _clean_text(data.decode("utf-8", errors="ignore"))
 
     return _result(
         scanned_file=scanned_file,
@@ -389,17 +326,13 @@ def read_scanned_file(
 def read_manifest_files(
     manifest: ScanManifest,
     *,
-    max_source_bytes: int = (
-        DEFAULT_MAX_SOURCE_BYTES
-    ),
+    max_source_bytes: int = DEFAULT_MAX_SOURCE_BYTES,
 ) -> tuple[FileReadResult, ...]:
     return tuple(
         read_scanned_file(
             project_path=manifest.project_path,
             scanned_file=scanned_file,
-            max_source_bytes=(
-                max_source_bytes
-            ),
+            max_source_bytes=max_source_bytes,
         )
         for scanned_file in manifest.files
     )
