@@ -183,46 +183,30 @@ def run_analysis(
         )
         return OUTPUT_ERROR
 
-    analysis_requested = (
-        architecture_requested
-        or report_requested
-        or trace_requested
-    )
-
+    analysis_requested = architecture_requested or report_requested or trace_requested
     manifest = None
 
     if analysis_requested:
-        print(
-            "\nScanning project..."
-        )
+        print("\nScanning project...")
 
         try:
             manifest = scan_project(
                 project_path,
                 ignore,
-                excluded_directories=(
-                    output_directory,
-                ),
+                excluded_directories=(output_directory,),
                 apply_gitignore=apply_target_gitignore,
             )
         except ScanError as error:
-            print(
-                f"Error: scan: {error}",
-                file=sys.stderr,
-            )
+            print(f"Error: scan: {error}", file=sys.stderr)
             return INVALID_INPUT
 
-        print(
-            "Scanned files after ignores: "
-            f"{len(manifest.files)}"
-        )
+        print(f"Scanned files after ignores: {len(manifest.files)}")
 
         if not manifest.files:
             print(
                 "Warning: no files were found. "
                 "Check the project path or ignore rules."
             )
-
             if not docs_requested:
                 return 0
 
@@ -231,90 +215,38 @@ def run_analysis(
     if (
         manifest is not None
         and manifest.files
-        and (
-            report_requested
-            or trace_requested
-        )
+        and (report_requested or trace_requested)
     ):
         try:
-            read_results = read_manifest_files(
-                manifest
-            )
-
-            source_evidence = (
-                build_source_evidence(
-                    read_results
-                )
-            )
-
+            read_results = read_manifest_files(manifest)
+            source_evidence = build_source_evidence(read_results)
         except OSError as error:
-            print(
-                "Error: could not prepare "
-                "source evidence: "
-                f"{error}",
-                file=sys.stderr,
-            )
+            print(f"Error: could not prepare source evidence: {error}", file=sys.stderr)
             return OUTPUT_ERROR
 
-
-    if (
-        architecture_requested
-        and manifest is not None
-        and manifest.files
-    ):
-        architecture_output = (
-            output_directory
-            / (
-                f"{project_name}"
-                "-architecture.md"
-            )
-        )
-
-        print(
-            "\nGenerating architecture..."
-        )
-
-        architecture = build_architecture(
-            manifest
-        )
+    if architecture_requested and manifest is not None and manifest.files:
+        architecture_output = output_directory / f"{project_name}-architecture.md"
+        print("\nGenerating architecture...")
+        architecture = build_architecture(manifest)
 
         try:
             architecture_output.write_text(
-                "# Project Architecture\n\n"
-                + architecture,
+                "# Project Architecture\n\n" + architecture,
                 encoding="utf-8",
                 newline="\n",
             )
         except OSError as error:
             print(
-                "Error: could not write "
-                "architecture report: "
-                f"{error}",
+                f"Error: could not write architecture report: {error}",
                 file=sys.stderr,
             )
             return OUTPUT_ERROR
 
-        print(
-            "Architecture written to: "
-            f"{architecture_output}"
-        )
+        print(f"Architecture written to: {architecture_output}")
 
-    if (
-        report_requested
-        and manifest is not None
-        and manifest.files
-    ):
-        report_output = (
-            output_directory
-            / (
-                f"{project_name}"
-                "-project-report.md"
-            )
-        )
-
-        print(
-            "\nGenerating project report..."
-        )
+    if report_requested and manifest is not None and manifest.files:
+        report_output = output_directory / f"{project_name}-project-report.md"
+        print("\nGenerating project report...")
 
         try:
             build_report(
@@ -323,109 +255,41 @@ def run_analysis(
                 output_path=report_output,
             )
         except OSError as error:
-            print(
-                "Error: could not write "
-                f"project report: {error}",
-                file=sys.stderr,
-            )
+            print(f"Error: could not write project report: {error}", file=sys.stderr)
             return OUTPUT_ERROR
 
-        print(
-            "Project report written to: "
-            f"{report_output}"
-        )
+        print(f"Project report written to: {report_output}")
 
-    if (
-        trace_requested
-        and manifest is not None
-        and manifest.files
-    ):
-        trace_output = (
-            output_directory
-            / (
-                f"{project_name}"
-                "-trace.md"
-            )
-        )
-
-        print(
-            "\nGenerating dependency trace..."
-        )
-
-        semantic_index = (
-            build_semantic_project_index(
-                source_evidence
-            )
-        )
-
-        dependency_graph = (
-            build_dependency_graph(
-                semantic_index
-            )
-        )
-
-        trace_text = (
-            render_dependency_graph(
-                dependency_graph
-            )
-        )
+    if trace_requested and manifest is not None and manifest.files:
+        trace_output = output_directory / f"{project_name}-trace.md"
+        print("\nGenerating dependency trace...")
+        semantic_index = build_semantic_project_index(source_evidence)
+        dependency_graph = build_dependency_graph(semantic_index)
+        trace_text = render_dependency_graph(dependency_graph)
 
         try:
-            trace_output.write_text(
-                trace_text,
-                encoding="utf-8",
-                newline="\n",
-            )
+            trace_output.write_text(trace_text, encoding="utf-8", newline="\n")
         except OSError as error:
-            print(
-                "Error: could not write "
-                "dependency trace: "
-                f"{error}",
-                file=sys.stderr,
-            )
+            print(f"Error: could not write dependency trace: {error}", file=sys.stderr)
             return OUTPUT_ERROR
 
-        print(
-            "Dependency trace written to: "
-            f"{trace_output}"
-        )
-
+        print(f"Dependency trace written to: {trace_output}")
 
     if docs_requested:
-        print(
-            "\nGenerating documentation reports..."
-        )
+        print("\nGenerating documentation reports...")
 
         try:
-            docs_summary = (
-                build_documentation_reports(
-                    project_path=project_path,
-                    output_directory=(
-                        output_directory
-                    ),
-                    ignore=ignore,
-                    confirm_private_ignore_override=(
-                        _confirm_private_docs_ignore_override
-                    ),
-                )
+            docs_summary = build_documentation_reports(
+                project_path=project_path,
+                output_directory=output_directory,
+                ignore=ignore,
+                confirm_private_ignore_override=_confirm_private_docs_ignore_override,
             )
-        except (
-            DocsReportError,
-            OSError,
-        ) as error:
-            print(
-                "Error: documentation reports: "
-                f"{error}",
-                file=sys.stderr,
-            )
+        except (DocsReportError, OSError) as error:
+            print(f"Error: documentation reports: {error}", file=sys.stderr)
             return OUTPUT_ERROR
 
-        print_documentation_summary(
-            docs_summary
-        )
+        print_documentation_summary(docs_summary)
 
-    print(
-        "\nDone."
-    )
-
+    print("\nDone.")
     return 0
