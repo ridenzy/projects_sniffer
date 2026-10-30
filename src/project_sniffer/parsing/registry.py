@@ -3,23 +3,15 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from project_sniffer.evidence import (
-    SourceEvidence,
-    SourceLanguage,
-)
-from project_sniffer.parsing.models import (
-    ParsedSource,
-)
+from project_sniffer.evidence import SourceEvidence, SourceLanguage
+from project_sniffer.parsing.models import ParsedSource
 from project_sniffer.parsing.python_parser import (
     PYTHON_AST_PARSER_ID,
     parse_python_source,
 )
 
 
-ParserFunction = Callable[
-    [SourceEvidence],
-    ParsedSource,
-]
+ParserFunction = Callable[[SourceEvidence], ParsedSource]
 
 
 @dataclass(frozen=True)
@@ -44,9 +36,5 @@ _DEFINITION_BY_LANGUAGE = {
 }
 
 
-def get_parser_definition(
-    language: SourceLanguage,
-) -> ParserDefinition | None:
-    return _DEFINITION_BY_LANGUAGE.get(
-        language
-    )
+def get_parser_definition(language: SourceLanguage) -> ParserDefinition | None:
+    return _DEFINITION_BY_LANGUAGE.get(language)

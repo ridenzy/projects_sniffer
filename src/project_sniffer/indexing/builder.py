@@ -2,57 +2,32 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from project_sniffer.evidence import (
-    SourceEvidence,
-)
+from project_sniffer.evidence import SourceEvidence
 from project_sniffer.indexing.models import (
     IndexedImport,
     IndexedSymbol,
     SemanticProjectIndex,
     IndexedCall,
 )
-from project_sniffer.parsing import (
-    ParseStatus,
-    parse_source_evidence,
-)
+from project_sniffer.parsing import ParseStatus, parse_source_evidence
 
 
 def build_semantic_project_index(
     source_evidence: Sequence[SourceEvidence],
 ) -> SemanticProjectIndex:
-    parsed_sources = tuple(
-        parse_source_evidence(
-            evidence
-        )
-        for evidence in source_evidence
-    )
+    parsed_sources = tuple(parse_source_evidence(evidence) for evidence in source_evidence)
 
-    imports: list[
-        IndexedImport
-    ] = []
+    imports: list[IndexedImport] = []
 
-    symbols: list[
-        IndexedSymbol
-    ] = []
+    symbols: list[IndexedSymbol] = []
 
-    calls: list[
-        IndexedCall
-    ] = []
+    calls: list[IndexedCall] = []
 
     for parsed in parsed_sources:
-        if (
-            parsed.status
-            is not ParseStatus.PARSED
-        ):
+        if parsed.status is not ParseStatus.PARSED:
             continue
 
-        source_path = (
-            parsed
-            .source
-            .read_result
-            .scanned_file
-            .relative_path
-        )
+        source_path = parsed.source.read_result.scanned_file.relative_path
 
         imports.extend(
             IndexedImport(
@@ -80,13 +55,7 @@ def build_semantic_project_index(
 
     return SemanticProjectIndex(
         parsed_sources=parsed_sources,
-        imports=tuple(
-            imports
-        ),
-        symbols=tuple(
-            symbols
-        ),
-        calls=tuple(
-            calls
-        ),
+        imports=tuple(imports),
+        symbols=tuple(symbols),
+        calls=tuple(calls),
     )
