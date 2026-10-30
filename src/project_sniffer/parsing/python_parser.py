@@ -163,77 +163,39 @@ class _PythonEvidenceVisitor(ast.NodeVisitor):
         self._scope.pop()
 
 
-def parse_python_source(
-    evidence: SourceEvidence,
-) -> ParsedSource:
-    if (
-        evidence.language
-        is not SourceLanguage.PYTHON
-    ):
-        raise ValueError(
-            "parse_python_source requires "
-            "Python SourceEvidence."
-        )
+def parse_python_source(evidence: SourceEvidence) -> ParsedSource:
+    if evidence.language is not SourceLanguage.PYTHON:
+        raise ValueError("parse_python_source requires Python SourceEvidence.")
 
-    content = (
-        evidence
-        .read_result
-        .content
-    )
+    content = evidence.read_result.content
 
     if content is None:
-        raise ValueError(
-            "parse_python_source requires "
-            "readable source content."
-        )
+        raise ValueError("parse_python_source requires readable source content.")
 
-    relative_path = (
-        evidence
-        .read_result
-        .scanned_file
-        .relative_path
-    )
+    relative_path = evidence.read_result.scanned_file.relative_path
 
     try:
-        tree = ast.parse(
-            content,
-            filename=relative_path,
-            type_comments=True,
-        )
+        tree = ast.parse(content, filename=relative_path, type_comments=True)
 
     except SyntaxError as error:
         return ParsedSource(
             source=evidence,
-            status=(
-                ParseStatus.SYNTAX_ERROR
-            ),
-            parser_id=(
-                PYTHON_AST_PARSER_ID
-            ),
+            status=ParseStatus.SYNTAX_ERROR,
+            parser_id=PYTHON_AST_PARSER_ID,
             error_type="SyntaxError",
             error_message=error.msg,
             error_line=error.lineno,
         )
 
-    visitor = (
-        _PythonEvidenceVisitor()
-    )
+    visitor = _PythonEvidenceVisitor()
 
-    visitor.visit(
-        tree
-    )
+    visitor.visit(tree)
 
     return ParsedSource(
         source=evidence,
         status=ParseStatus.PARSED,
         parser_id=PYTHON_AST_PARSER_ID,
-        imports=tuple(
-            visitor.imports
-        ),
-        symbols=tuple(
-            visitor.symbols
-        ),
-        calls=tuple(
-            visitor.calls
-        ),
+        imports=tuple(visitor.imports),
+        symbols=tuple(visitor.symbols),
+        calls=tuple(visitor.calls),
     )
