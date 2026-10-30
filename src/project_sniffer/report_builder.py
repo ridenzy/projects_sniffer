@@ -4,14 +4,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from project_sniffer.evidence import (
-    SourceEvidence,
-    SourceLanguage,
-)
-from project_sniffer.reading import (
-    FileReadResult,
-    FileReadStatus,
-)
+from project_sniffer.evidence import SourceEvidence, SourceLanguage
+from project_sniffer.reading import FileReadResult, FileReadStatus
 
 
 OUTPUT_PATH = "reports/project-report.md"
@@ -30,9 +24,7 @@ class ReportBuildSummary:
     skipped_markdown_error_files: int
 
 
-def get_safe_markdown_fence(
-    content: str,
-) -> str:
+def get_safe_markdown_fence(content: str) -> str:
     """
     Create a Markdown code fence that cannot be accidentally closed
     by backticks contained inside the source file.
@@ -45,17 +37,11 @@ def get_safe_markdown_fence(
         if char == "`":
             current_backtick_run += 1
 
-            longest_backtick_run = max(
-                longest_backtick_run,
-                current_backtick_run,
-            )
+            longest_backtick_run = max(longest_backtick_run, current_backtick_run)
         else:
             current_backtick_run = 0
 
-    fence_length = max(
-        3,
-        longest_backtick_run + 1,
-    )
+    fence_length = max(3, longest_backtick_run + 1)
 
     return "`" * fence_length
 
@@ -73,61 +59,36 @@ def add_text_safely(
     owns Markdown rendering and output writing, not target-project file access.
     """
 
-    report_sections.append(
-        f"# `{relative_path}`\n\n"
-    )
+    report_sections.append(f"# `{relative_path}`\n\n")
 
     max_chunk_size = 25000
 
     if not content.strip():
-        report_sections.append(
-            "[empty file]\n\n"
-        )
+        report_sections.append("[empty file]\n\n")
 
-        report_sections.append(
-            "---\n\n"
-        )
+        report_sections.append("---\n\n")
 
         return
 
-    markdown_fence = get_safe_markdown_fence(
-        content
-    )
+    markdown_fence = get_safe_markdown_fence(content)
 
     report_sections.append(
         f"{markdown_fence}"
         f"{language.markdown_fence_label}\n"
     )
 
-    for index in range(
-        0,
-        len(content),
-        max_chunk_size,
-    ):
-        chunk = content[
-            index:index + max_chunk_size
-        ]
+    for index in range(0, len(content), max_chunk_size):
+        chunk = content[index:index + max_chunk_size]
 
-        report_sections.append(
-            chunk
-        )
+        report_sections.append(chunk)
 
-    report_sections.append(
-        f"\n{markdown_fence}\n\n"
-    )
+    report_sections.append(f"\n{markdown_fence}\n\n")
 
-    report_sections.append(
-        "---\n\n"
-    )
+    report_sections.append("---\n\n")
 
 
-def _unreadable_detail(
-    result: FileReadResult,
-) -> str:
-    error_type = (
-        result.error_type
-        or "UnknownError"
-    )
+def _unreadable_detail(result: FileReadResult) -> str:
+    error_type = result.error_type or "UnknownError"
 
     if result.error_message:
         return (
@@ -157,19 +118,9 @@ def build_report(
     Project Sniffer report.
     """
 
-    project_root = (
-        Path(
-            project_path
-        )
-        .expanduser()
-        .resolve()
-    )
+    project_root = Path(project_path).expanduser().resolve()
 
-    resolved_project_name = (
-        project_name
-        or project_root.name
-        or "root"
-    )
+    resolved_project_name = project_name or project_root.name or "root"
 
     report_sections = [
         f"# {report_title}\n\n",
@@ -182,9 +133,7 @@ def build_report(
             f"`{source_root_label}`\n\n"
         )
 
-    report_sections.append(
-        "---\n\n"
-    )
+    report_sections.append("---\n\n")
 
     added_files = 0
 
@@ -209,29 +158,16 @@ def build_report(
     for evidence in source_evidence:
         result = evidence.read_result
 
-        relative_path = (
-            result
-            .scanned_file
-            .relative_path
-        )
+        relative_path = result.scanned_file.relative_path
 
-        if (
-            result.status
-            is FileReadStatus.BINARY
-        ):
+        if result.status is FileReadStatus.BINARY:
             skipped_binary += 1
 
-            print(
-                f"[SKIP binary] "
-                f"{relative_path}"
-            )
+            print(f"[SKIP binary] {relative_path}")
 
             continue
 
-        if (
-            result.status
-            is FileReadStatus.OVERSIZED
-        ):
+        if result.status is FileReadStatus.OVERSIZED:
             skipped_oversized += 1
 
             size_detail = (
@@ -242,69 +178,37 @@ def build_report(
                 )
             )
 
-            print(
-                f"[SKIP oversized] "
-                f"{relative_path} -> "
-                f"{size_detail}"
-            )
+            print(f"[SKIP oversized] {relative_path} -> {size_detail}")
 
             continue
 
-        if (
-            result.status
-            is FileReadStatus.UNREADABLE
-        ):
+        if result.status is FileReadStatus.UNREADABLE:
             skipped_unreadable += 1
 
-            print(
-                f"[SKIP unreadable] "
-                f"{relative_path} -> "
-                f"{_unreadable_detail(result)}"
-            )
+            print(f"[SKIP unreadable] {relative_path} -> {_unreadable_detail(result)}")
 
             continue
 
-        if (
-            result.status
-            is FileReadStatus.SYMLINK
-        ):
+        if result.status is FileReadStatus.SYMLINK:
             skipped_symlink += 1
 
-            print(
-                f"[SKIP symlink] "
-                f"{relative_path}"
-            )
+            print(f"[SKIP symlink] {relative_path}")
 
             continue
 
         if result.status in unsafe_statuses:
             skipped_unsafe_path += 1
 
-            label = (
-                result.status.value.replace(
-                    "_",
-                    "-",
-                )
-            )
+            label = result.status.value.replace("_", "-")
 
-            print(
-                f"[SKIP {label}] "
-                f"{relative_path}"
-            )
+            print(f"[SKIP {label}] {relative_path}")
 
             continue
 
-        if (
-            result.status
-            is not FileReadStatus.TEXT
-        ):
+        if result.status is not FileReadStatus.TEXT:
             skipped_unsafe_path += 1
 
-            print(
-                f"[SKIP invalid-read-status] "
-                f"{relative_path} -> "
-                f"{result.status!r}"
-            )
+            print(f"[SKIP invalid-read-status] {relative_path} -> {result.status!r}")
 
             continue
 
@@ -314,8 +218,7 @@ def build_report(
             skipped_unreadable += 1
 
             print(
-                f"[SKIP invalid-read-result] "
-                f"{relative_path} -> "
+                f"[SKIP invalid-read-result] {relative_path} -> "
                 "TEXT result has no content"
             )
 
@@ -331,9 +234,7 @@ def build_report(
 
             added_files += 1
 
-            print(
-                f"[ADD] {relative_path}"
-            )
+            print(f"[ADD] {relative_path}")
 
         except Exception as error:
             skipped_markdown_error += 1
