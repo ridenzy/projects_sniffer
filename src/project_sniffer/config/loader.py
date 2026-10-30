@@ -180,150 +180,74 @@ def _load_project_profile(
     project_path: Path,
     source: str,
 ) -> IgnoreConfig:
-    unexpected = sorted(
-        set(
-            registry
-        )
-        - {
-            "schema_version",
-            "projects",
-        }
-    )
+    unexpected = sorted(set(registry) - {"schema_version", "projects"})
 
     if unexpected:
         raise ConfigurationError(
             f"{source}: unsupported top-level keys: "
-            + ", ".join(
-                unexpected
-            )
+            + ", ".join(unexpected)
         )
 
-    schema_version = registry.get(
-        "schema_version"
-    )
+    schema_version = registry.get("schema_version")
 
-    if (
-        type(
-            schema_version
-        )
-        is not int
-        or schema_version
-        != _SUPPORTED_SCHEMA_VERSION
-    ):
+    if type(schema_version) is not int or schema_version != _SUPPORTED_SCHEMA_VERSION:
         raise ConfigurationError(
             f"{source}: schema_version must be "
             f"{_SUPPORTED_SCHEMA_VERSION}."
         )
 
-    projects = registry.get(
-        "projects"
-    )
+    projects = registry.get("projects")
 
-    if not isinstance(
-        projects,
-        dict,
-    ):
+    if not isinstance(projects, dict):
         raise ConfigurationError(
             f"{source}: projects must be a JSON object."
         )
 
-    matches: list[
-        tuple[
-            int,
-            str,
-            IgnoreConfig,
-        ]
-    ] = []
+    matches: list[tuple[int, str, IgnoreConfig]] = []
 
     for profile_id, raw_profile in projects.items():
-        if (
-            not isinstance(
-                profile_id,
-                str,
-            )
-            or not profile_id.strip()
-        ):
+        if not isinstance(profile_id, str) or not profile_id.strip():
             raise ConfigurationError(
                 f"{source}: every project profile ID "
                 "must be a non-empty string."
             )
 
-        profile_source = (
-            f"{source}: "
-            f"projects[{profile_id!r}]"
-        )
+        profile_source = f"{source}: projects[{profile_id!r}]"
 
-        if not isinstance(
-            raw_profile,
-            dict,
-        ):
+        if not isinstance(raw_profile, dict):
             raise ConfigurationError(
                 f"{profile_source} must be a JSON object."
             )
 
-        unexpected_profile_keys = sorted(
-            set(
-                raw_profile
-            )
-            - _PROFILE_KEYS
-        )
+        unexpected_profile_keys = sorted(set(raw_profile) - _PROFILE_KEYS)
 
         if unexpected_profile_keys:
             raise ConfigurationError(
                 f"{profile_source}: unsupported keys: "
-                + ", ".join(
-                    unexpected_profile_keys
-                )
+                + ", ".join(unexpected_profile_keys)
             )
 
-        ignore_config = (
-            _validate_ignore_config(
-                raw_profile,
-                profile_source,
-            )
-        )
+        ignore_config = _validate_ignore_config(raw_profile, profile_source)
 
-        specificity = (
-            _profile_match_specificity(
-                profile_id=profile_id,
-                profile=raw_profile,
-                project_path=project_path,
-                source=profile_source,
-            )
+        specificity = _profile_match_specificity(
+            profile_id=profile_id,
+            profile=raw_profile,
+            project_path=project_path,
+            source=profile_source,
         )
 
         if specificity is not None:
-            matches.append(
-                (
-                    specificity,
-                    profile_id,
-                    ignore_config,
-                )
-            )
+            matches.append((specificity, profile_id, ignore_config))
 
     if not matches:
         return empty_ignore_config()
 
-    highest = max(
-        item[0]
-        for item in matches
-    )
+    highest = max(item[0] for item in matches)
 
-    best = [
-        item
-        for item in matches
-        if item[0] == highest
-    ]
+    best = [item for item in matches if item[0] == highest]
 
-    if len(
-        best
-    ) != 1:
-        profile_ids = ", ".join(
-            repr(
-                item[1]
-            )
-            for item in best
-        )
+    if len(best) != 1:
+        profile_ids = ", ".join(repr(item[1]) for item in best)
 
         raise ConfigurationError(
             f"{source}: multiple personal profiles "
@@ -345,28 +269,19 @@ def load_personal_ignores(
     this function never creates or modifies it.
     """
 
-    path = (
-        registry_path
-        if registry_path is not None
-        else get_personal_registry_path()
-    )
+    path = registry_path if registry_path is not None else get_personal_registry_path()
 
     if not path.is_file():
         return empty_ignore_config()
 
-    data = _read_json_file(
-        path
-    )
+    data = _read_json_file(path)
 
     if not isinstance(data, dict):
         raise ConfigurationError(
             f"{path} must contain a JSON object."
         )
 
-    if (
-        "schema_version" not in data
-        and "projects" not in data
-    ):
+    if "schema_version" not in data and "projects" not in data:
         raise ConfigurationError(
             f"{path}: personal registry must use "
             "schema-version-1 per-project format."
@@ -375,9 +290,7 @@ def load_personal_ignores(
     return _load_project_profile(
         registry=data,
         project_path=project_path,
-        source=str(
-            path
-        ),
+        source=str(path),
     )
 
 
@@ -387,28 +300,10 @@ def merge_ignore_configs(
 ) -> IgnoreConfig:
     return {
         "IGNORE_FOLDERS": sorted(
-            set(
-                recommended[
-                    "IGNORE_FOLDERS"
-                ]
-            )
-            | set(
-                personal[
-                    "IGNORE_FOLDERS"
-                ]
-            )
+            set(recommended["IGNORE_FOLDERS"]) | set(personal["IGNORE_FOLDERS"]),
         ),
         "IGNORE_FILES": sorted(
-            set(
-                recommended[
-                    "IGNORE_FILES"
-                ]
-            )
-            | set(
-                personal[
-                    "IGNORE_FILES"
-                ]
-            )
+            set(recommended["IGNORE_FILES"]) | set(personal["IGNORE_FILES"]),
         ),
     }
 
@@ -431,8 +326,6 @@ def load_ignore_config(
         load_recommended_ignores(),
         load_personal_ignores(
             project_path=project_path,
-            registry_path=(
-                personal_registry_path
-            ),
+            registry_path=personal_registry_path,
         ),
     )
