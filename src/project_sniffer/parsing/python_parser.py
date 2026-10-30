@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import ast
 
-from project_sniffer.evidence import (
-    SourceEvidence,
-    SourceLanguage,
-)
+from project_sniffer.evidence import SourceEvidence, SourceLanguage
 from project_sniffer.parsing.models import (
     ImportEvidence,
     ParsedSource,
@@ -22,119 +19,57 @@ PYTHON_AST_PARSER_ID = "python-stdlib-ast"
 
 
 
-def _static_call_target_parts(
-    node: ast.AST,
-) -> tuple[str, ...] | None:
-    if isinstance(
-        node,
-        ast.Name,
-    ):
-        return (
-            node.id,
-        )
+def _static_call_target_parts(node: ast.AST) -> tuple[str, ...] | None:
+    if isinstance(node, ast.Name):
+        return (node.id,)
 
-    if isinstance(
-        node,
-        ast.Attribute,
-    ):
-        parent = (
-            _static_call_target_parts(
-                node.value
-            )
-        )
+    if isinstance(node, ast.Attribute):
+        parent = _static_call_target_parts(node.value)
 
         if parent is None:
             return None
 
-        return (
-            *parent,
-            node.attr,
-        )
+        return (*parent, node.attr)
 
     return None
 
-def _dynamic_call_kind(
-    node: ast.AST,
-) -> DynamicCallKind:
-    if isinstance(
-        node,
-        ast.Subscript,
-    ):
-        return (
-            DynamicCallKind
-            .SUBSCRIPT_SELECTED
-        )
+def _dynamic_call_kind(node: ast.AST) -> DynamicCallKind:
+    if isinstance(node, ast.Subscript):
+        return DynamicCallKind.SUBSCRIPT_SELECTED
 
-    if isinstance(
-        node,
-        ast.Call,
-    ):
-        inner_target = (
-            _static_call_target_parts(
-                node.func
-            )
-        )
+    if isinstance(node, ast.Call):
+        inner_target = _static_call_target_parts(node.func)
 
-        if inner_target == (
-            "getattr",
-        ):
-            return (
-                DynamicCallKind
-                .GETATTR_RESULT
-            )
+        if inner_target == ("getattr",):
+            return DynamicCallKind.GETATTR_RESULT
 
-        return (
-            DynamicCallKind
-            .RETURNED_CALLABLE
-        )
+        return DynamicCallKind.RETURNED_CALLABLE
 
     return DynamicCallKind.OTHER
 
 
-class _PythonEvidenceVisitor(
-    ast.NodeVisitor
-):
-    def __init__(
-        self,
-    ) -> None:
-        self.imports: list[
-            ImportEvidence
-        ] = []
+class _PythonEvidenceVisitor(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.imports: list[ImportEvidence] = []
 
-        self.symbols: list[
-            SymbolEvidence
-        ] = []
+        self.symbols: list[SymbolEvidence] = []
 
-        self.calls: list[
-            CallEvidence
-        ] = []
+        self.calls: list[CallEvidence] = []
 
         self._scope: list[str] = []
 
     @property
-    def scope_name(
-        self,
-    ) -> str | None:
+    def scope_name(self) -> str | None:
         if not self._scope:
             return None
 
-        return ".".join(
-            self._scope
-        )
+        return ".".join(self._scope)
 
-    def qualified_name(
-        self,
-        name: str,
-    ) -> str:
+    def qualified_name(self, name: str) -> str:
         if not self._scope:
             return name
 
-        return ".".join(
-            (
-                *self._scope,
-                name,
-            )
-        )
+        return ".".join((*self._scope, name))
 
     def record_symbol(
         self,
