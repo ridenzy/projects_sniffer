@@ -246,21 +246,12 @@ def build_report(
                 f"{error}"
             )
 
-    output = Path(
-        output_path
-    )
+    output = Path(output_path)
 
-    output.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    output.parent.mkdir(parents=True, exist_ok=True)
 
     output.write_text(
-        "".join(
-            report_sections
-        ),
-        encoding="utf-8",
-        newline="\n",
+        "".join(report_sections), encoding="utf-8", newline="\n"
     )
 
     summary = ReportBuildSummary(
@@ -272,50 +263,19 @@ def build_report(
         skipped_unreadable_files=skipped_unreadable,
         skipped_symlink_files=skipped_symlink,
         skipped_unsafe_path_files=skipped_unsafe_path,
-        skipped_markdown_error_files=(
-            skipped_markdown_error
-        ),
+        skipped_markdown_error_files=skipped_markdown_error,
     )
 
     if print_summary:
-        print(
-            "\nReport summary:"
-        )
-        print(
-            f"  Added text files: "
-            f"{summary.added_files}"
-        )
-        print(
-            f"  Skipped ignored files: "
-            f"{summary.skipped_ignored_files}"
-        )
-        print(
-            f"  Skipped binary files: "
-            f"{summary.skipped_binary_files}"
-        )
-        print(
-            f"  Skipped oversized files: "
-            f"{summary.skipped_oversized_files}"
-        )
-        print(
-            f"  Skipped unreadable files: "
-            f"{summary.skipped_unreadable_files}"
-        )
-        print(
-            f"  Skipped symlink files: "
-            f"{summary.skipped_symlink_files}"
-        )
-        print(
-            f"  Skipped unsafe-path files: "
-            f"{summary.skipped_unsafe_path_files}"
-        )
-        print(
-            f"  Skipped markdown-error files: "
-            f"{summary.skipped_markdown_error_files}"
-        )
-        print(
-            f"  Report saved to: "
-            f"{summary.output_path}"
-        )
+        print("\nReport summary:")
+        print(f"  Added text files: {summary.added_files}")
+        print(f"  Skipped ignored files: {summary.skipped_ignored_files}")
+        print(f"  Skipped binary files: {summary.skipped_binary_files}")
+        print(f"  Skipped oversized files: {summary.skipped_oversized_files}")
+        print(f"  Skipped unreadable files: {summary.skipped_unreadable_files}")
+        print(f"  Skipped symlink files: {summary.skipped_symlink_files}")
+        print(f"  Skipped unsafe-path files: {summary.skipped_unsafe_path_files}")
+        print(f"  Skipped markdown-error files: {summary.skipped_markdown_error_files}")
+        print(f"  Report saved to: {summary.output_path}")
 
     return summary
