@@ -3,47 +3,26 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from project_sniffer.architecture_builder import (
-    build_architecture,
-)
-from project_sniffer.config import (
-    ConfigurationError,
-    load_ignore_config,
-)
+from project_sniffer.architecture_builder import build_architecture
+from project_sniffer.config import ConfigurationError, load_ignore_config
 from project_sniffer.docs_reporter import (
     DocsReportError,
     build_documentation_reports,
     print_documentation_summary,
 )
-from project_sniffer.evidence import (
-    build_source_evidence,
-)
-from project_sniffer.indexing import (
-    build_semantic_project_index,
-)
-from project_sniffer.reading import (
-    read_manifest_files,
-)
-from project_sniffer.report_builder import (
-    build_report,
-)
-from project_sniffer.scanning import (
-    ScanError,
-    scan_project,
-)
-from project_sniffer.tracing import (
-    build_dependency_graph,
-    render_dependency_graph,
-)
+from project_sniffer.evidence import build_source_evidence
+from project_sniffer.indexing import build_semantic_project_index
+from project_sniffer.reading import read_manifest_files
+from project_sniffer.report_builder import build_report
+from project_sniffer.scanning import ScanError, scan_project
+from project_sniffer.tracing import build_dependency_graph, render_dependency_graph
 
 
 INVALID_INPUT = 1
 OUTPUT_ERROR = 4
 
 
-def resolve_project_path(
-    project_value: str,
-) -> Path:
+def resolve_project_path(project_value: str) -> Path:
     """
     Resolve an absolute or relative project path correctly.
 
@@ -51,13 +30,7 @@ def resolve_project_path(
     the current working directory rather than being prefixed with `/`.
     """
 
-    return (
-        Path(
-            project_value
-        )
-        .expanduser()
-        .resolve()
-    )
+    return Path(project_value).expanduser().resolve()
 
 
 def resolve_output_directory(
@@ -78,31 +51,19 @@ def resolve_output_directory(
     """
 
     if output_value is None:
-        base_output_directory = (
-            working_directory
-            / "reports"
-        )
+        base_output_directory = working_directory / "reports"
 
     else:
-        requested_output = Path(
-            output_value
-        ).expanduser()
+        requested_output = Path(output_value).expanduser()
 
         if requested_output.is_absolute():
-            base_output_directory = (
-                requested_output
-            )
+            base_output_directory = requested_output
 
         else:
-            base_output_directory = (
-                working_directory
-                / requested_output
-            )
+            base_output_directory = working_directory / requested_output
 
-    return (
-        base_output_directory
-        / project_name
-    ).resolve()
+    return (base_output_directory / project_name).resolve()
+
 
 def _confirm_private_docs_ignore_override() -> bool:
     print(
@@ -126,50 +87,30 @@ def _confirm_private_docs_ignore_override() -> bool:
 
     while True:
         try:
-            answer = input(
-                "Generate the docs/private/ "
-                "report? [y/N]: "
-            )
+            answer = input("Generate the docs/private/ report? [y/N]: ")
 
         except EOFError:
             print(
                 "\nNo interactive response was "
-                "available. Keeping docs/private/ "
-                "ignored."
+                "available. Keeping docs/private/ ignored."
             )
             return False
 
-        normalized = (
-            answer
-            .strip()
-            .lower()
-        )
+        normalized = answer.strip().lower()
 
-        if normalized in {
-            "y",
-            "yes",
-        }:
-            print(
-                "Private documentation override "
-                "approved for this run."
-            )
+        if normalized in {"y", "yes"}:
+            print("Private documentation override approved for this run.")
             return True
 
-        if normalized in {
-            "",
-            "n",
-            "no",
-        }:
+        if normalized in {"", "n", "no"}:
             print(
                 "Private documentation override "
-                "declined. Keeping docs/private/ "
-                "ignored."
+                "declined. Keeping docs/private/ ignored."
             )
             return False
 
-        print(
-            "Please answer y or n."
-        )
+        print("Please answer y or n.")
+
 
 def run_analysis(
     *,
@@ -184,9 +125,7 @@ def run_analysis(
 ) -> int:
     """Run the implemented analysis and documentation-output operations."""
 
-    project_path = resolve_project_path(
-        project_value
-    )
+    project_path = resolve_project_path(project_value)
 
     if not project_path.exists():
         print(
@@ -204,23 +143,12 @@ def run_analysis(
         )
         return INVALID_INPUT
 
-    project_name = (
-        project_path.name
-        or "root"
+    project_name = project_path.name or "root"
+    output_directory = resolve_output_directory(
+        output_value, project_name, working_directory
     )
 
-    output_directory = (
-        resolve_output_directory(
-            output_value,
-            project_name,
-            working_directory,
-        )
-    )
-
-    if (
-        output_directory.exists()
-        and not output_directory.is_dir()
-    ):
+    if output_directory.exists() and not output_directory.is_dir():
         print(
             "Error: output path exists but is not "
             f"a directory: {output_directory}",
@@ -229,14 +157,9 @@ def run_analysis(
         return OUTPUT_ERROR
 
     try:
-        ignore = load_ignore_config(
-            project_path=project_path
-        )
+        ignore = load_ignore_config(project_path=project_path)
     except ConfigurationError as error:
-        print(
-            f"Error: configuration: {error}",
-            file=sys.stderr,
-        )
+        print(f"Error: configuration: {error}", file=sys.stderr)
         return INVALID_INPUT
 
     if output_directory == project_path:
@@ -247,18 +170,11 @@ def run_analysis(
         )
         return INVALID_INPUT
 
-    print(
-        f"Project: {project_path}"
-    )
-    print(
-        f"Output directory: {output_directory}"
-    )
+    print(f"Project: {project_path}")
+    print(f"Output directory: {output_directory}")
 
     try:
-        output_directory.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        output_directory.mkdir(parents=True, exist_ok=True)
     except OSError as error:
         print(
             "Error: could not create output "
