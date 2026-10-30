@@ -13,19 +13,11 @@ DEFAULT_MAX_SOURCE_BYTES = 8 * 1024 * 1024
 
 def _validate_max_source_bytes(max_source_bytes: int) -> int:
     if (
-        isinstance(
-            max_source_bytes,
-            bool,
-        )
-        or not isinstance(
-            max_source_bytes,
-            int,
-        )
+        isinstance(max_source_bytes, bool)
+        or not isinstance(max_source_bytes, int)
         or max_source_bytes < 1
     ):
-        raise ValueError(
-            "max_source_bytes must be a positive integer"
-        )
+        raise ValueError("max_source_bytes must be a positive integer")
 
     return max_source_bytes
 
@@ -51,14 +43,9 @@ def _lexical_absolute_path(path: Path) -> Path:
     return Path(os.path.abspath(os.fspath(path)))
 
 
-def _is_within_project(
-    path: Path,
-    project_path: Path,
-) -> bool:
+def _is_within_project(path: Path, project_path: Path) -> bool:
     try:
-        path.relative_to(
-            project_path
-        )
+        path.relative_to(project_path)
     except ValueError:
         return False
 
@@ -104,103 +91,58 @@ def read_scanned_file(
     """
 
     max_source_bytes = _validate_max_source_bytes(max_source_bytes)
-
     project_root = project_path.expanduser().resolve()
-
     candidate = _lexical_absolute_path(scanned_file.absolute_path)
 
     try:
         lexical_relative = candidate.relative_to(project_root)
     except ValueError:
-        return _result(
-            scanned_file=scanned_file,
-            status=(
-                FileReadStatus.OUTSIDE_PROJECT
-            ),
-        )
+        return _result(scanned_file=scanned_file, status=FileReadStatus.OUTSIDE_PROJECT)
 
-    if (
-        lexical_relative.as_posix()
-        != scanned_file.relative_path
-    ):
-        return _result(
-            scanned_file=scanned_file,
-            status=(
-                FileReadStatus.PATH_MISMATCH
-            ),
-        )
+    if lexical_relative.as_posix() != scanned_file.relative_path:
+        return _result(scanned_file=scanned_file, status=FileReadStatus.PATH_MISMATCH)
 
     if candidate.is_symlink():
         try:
-            resolved_path = (
-                candidate.resolve(
-                    strict=False
-                )
-            )
+            resolved_path = candidate.resolve(strict=False)
         except OSError as error:
             return _result(
                 scanned_file=scanned_file,
-                status=(
-                    FileReadStatus.UNREADABLE
-                ),
+                status=FileReadStatus.UNREADABLE,
                 is_symlink=True,
-                error_type=type(
-                    error
-                ).__name__,
-                error_message=str(
-                    error
-                ),
+                error_type=type(error).__name__,
+                error_message=str(error),
             )
 
-        if not _is_within_project(
-            resolved_path,
-            project_root,
-        ):
+        if not _is_within_project(resolved_path, project_root):
             return _result(
                 scanned_file=scanned_file,
-                status=(
-                    FileReadStatus.ESCAPED_SYMLINK
-                ),
+                status=FileReadStatus.ESCAPED_SYMLINK,
                 resolved_path=resolved_path,
                 is_symlink=True,
             )
 
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.SYMLINK
-            ),
+            status=FileReadStatus.SYMLINK,
             resolved_path=resolved_path,
             is_symlink=True,
         )
 
     try:
-        resolved_path = candidate.resolve(
-            strict=True
-        )
+        resolved_path = candidate.resolve(strict=True)
     except OSError as error:
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.UNREADABLE
-            ),
-            error_type=type(
-                error
-            ).__name__,
-            error_message=str(
-                error
-            ),
+            status=FileReadStatus.UNREADABLE,
+            error_type=type(error).__name__,
+            error_message=str(error),
         )
 
-    if not _is_within_project(
-        resolved_path,
-        project_root,
-    ):
+    if not _is_within_project(resolved_path, project_root):
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.OUTSIDE_PROJECT
-            ),
+            status=FileReadStatus.OUTSIDE_PROJECT,
             resolved_path=resolved_path,
         )
 
@@ -209,53 +151,32 @@ def read_scanned_file(
     except OSError as error:
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.UNREADABLE
-            ),
+            status=FileReadStatus.UNREADABLE,
             resolved_path=resolved_path,
-            error_type=type(
-                error
-            ).__name__,
-            error_message=str(
-                error
-            ),
+            error_type=type(error).__name__,
+            error_message=str(error),
         )
 
-    if not stat.S_ISREG(
-        file_stat.st_mode
-    ):
+    if not stat.S_ISREG(file_stat.st_mode):
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.UNREADABLE
-            ),
+            status=FileReadStatus.UNREADABLE,
             resolved_path=resolved_path,
             size_bytes=file_stat.st_size,
             error_type="UnsupportedFileType",
-            error_message=(
-                "source path is not a regular file"
-            ),
+            error_message="source path is not a regular file",
         )
 
     try:
-        with resolved_path.open(
-            "rb"
-        ) as file_handle:
+        with resolved_path.open("rb") as file_handle:
             size_bytes = os.fstat(file_handle.fileno()).st_size
-
-            sample_limit = min(
-                2048,
-                max_source_bytes + 1,
-            )
-
+            sample_limit = min(2048, max_source_bytes + 1)
             sample = file_handle.read(sample_limit)
 
             if b"\x00" in sample:
                 return _result(
                     scanned_file=scanned_file,
-                    status=(
-                        FileReadStatus.BINARY
-                    ),
+                    status=FileReadStatus.BINARY,
                     resolved_path=resolved_path,
                     size_bytes=size_bytes,
                 )
@@ -263,51 +184,31 @@ def read_scanned_file(
             if size_bytes > max_source_bytes:
                 return _result(
                     scanned_file=scanned_file,
-                    status=(
-                        FileReadStatus.OVERSIZED
-                    ),
+                    status=FileReadStatus.OVERSIZED,
                     resolved_path=resolved_path,
                     size_bytes=size_bytes,
                 )
 
             remaining_limit = max_source_bytes + 1 - len(sample)
-
             remainder = file_handle.read(remaining_limit)
-
             data = sample + remainder
-
             observed_size = os.fstat(file_handle.fileno()).st_size
 
     except OSError as error:
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.UNREADABLE
-            ),
+            status=FileReadStatus.UNREADABLE,
             resolved_path=resolved_path,
-            error_type=type(
-                error
-            ).__name__,
-            error_message=str(
-                error
-            ),
+            error_type=type(error).__name__,
+            error_message=str(error),
         )
 
-    size_bytes = max(
-        size_bytes,
-        observed_size,
-        len(data),
-    )
+    size_bytes = max(size_bytes, observed_size, len(data))
 
-    if (
-        len(data) > max_source_bytes
-        or observed_size > max_source_bytes
-    ):
+    if len(data) > max_source_bytes or observed_size > max_source_bytes:
         return _result(
             scanned_file=scanned_file,
-            status=(
-                FileReadStatus.OVERSIZED
-            ),
+            status=FileReadStatus.OVERSIZED,
             resolved_path=resolved_path,
             size_bytes=size_bytes,
         )
