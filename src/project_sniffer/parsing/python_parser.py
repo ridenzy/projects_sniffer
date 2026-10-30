@@ -71,38 +71,18 @@ class _PythonEvidenceVisitor(ast.NodeVisitor):
 
         return ".".join((*self._scope, name))
 
-    def record_symbol(
-        self,
-        node: ast.AST,
-        name: str,
-        kind: SymbolKind,
-    ) -> None:
+    def record_symbol(self, node: ast.AST, name: str, kind: SymbolKind) -> None:
         self.symbols.append(
             SymbolEvidence(
                 name=name,
-                qualified_name=(
-                    self.qualified_name(
-                        name
-                    )
-                ),
+                qualified_name=self.qualified_name(name),
                 kind=kind,
-                line=getattr(
-                    node,
-                    "lineno",
-                    0,
-                ),
-                end_line=getattr(
-                    node,
-                    "end_lineno",
-                    None,
-                ),
+                line=getattr(node, "lineno", 0),
+                end_line=getattr(node, "end_lineno", None),
             )
         )
 
-    def visit_Import(
-        self,
-        node: ast.Import,
-    ) -> None:
+    def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             self.imports.append(
                 ImportEvidence(
@@ -115,10 +95,7 @@ class _PythonEvidenceVisitor(ast.NodeVisitor):
                 )
             )
 
-    def visit_ImportFrom(
-        self,
-        node: ast.ImportFrom,
-    ) -> None:
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         for alias in node.names:
             self.imports.append(
                 ImportEvidence(
@@ -131,39 +108,20 @@ class _PythonEvidenceVisitor(ast.NodeVisitor):
                 )
             )
 
-    def visit_Call(
-        self,
-        node: ast.Call,
-    ) -> None:
-        target_parts = (
-            _static_call_target_parts(
-                node.func
-            )
-        )
+    def visit_Call(self, node: ast.Call) -> None:
+        target_parts = _static_call_target_parts(node.func)
         dynamic_kind = None
 
         if target_parts is None:
-            target_kind = (
-                CallTargetKind.DYNAMIC
-            )
-            dynamic_kind = (
-                _dynamic_call_kind(
-                    node.func
-                )
-            )
+            target_kind = CallTargetKind.DYNAMIC
+            dynamic_kind = _dynamic_call_kind(node.func)
             target_parts = ()
 
-        elif len(
-            target_parts
-        ) == 1:
-            target_kind = (
-                CallTargetKind.NAME
-            )
+        elif len(target_parts) == 1:
+            target_kind = CallTargetKind.NAME
 
         else:
-            target_kind = (
-                CallTargetKind.ATTRIBUTE
-            )
+            target_kind = CallTargetKind.ATTRIBUTE
 
         self.calls.append(
             CallEvidence(
@@ -175,67 +133,32 @@ class _PythonEvidenceVisitor(ast.NodeVisitor):
             )
         )
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
-    def visit_ClassDef(
-        self,
-        node: ast.ClassDef,
-    ) -> None:
-        self.record_symbol(
-            node,
-            node.name,
-            SymbolKind.CLASS,
-        )
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.record_symbol(node, node.name, SymbolKind.CLASS)
 
-        self._scope.append(
-            node.name
-        )
+        self._scope.append(node.name)
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
         self._scope.pop()
 
-    def visit_FunctionDef(
-        self,
-        node: ast.FunctionDef,
-    ) -> None:
-        self.record_symbol(
-            node,
-            node.name,
-            SymbolKind.FUNCTION,
-        )
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.record_symbol(node, node.name, SymbolKind.FUNCTION)
 
-        self._scope.append(
-            node.name
-        )
+        self._scope.append(node.name)
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
         self._scope.pop()
 
-    def visit_AsyncFunctionDef(
-        self,
-        node: ast.AsyncFunctionDef,
-    ) -> None:
-        self.record_symbol(
-            node,
-            node.name,
-            SymbolKind.ASYNC_FUNCTION,
-        )
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.record_symbol(node, node.name, SymbolKind.ASYNC_FUNCTION)
 
-        self._scope.append(
-            node.name
-        )
+        self._scope.append(node.name)
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
         self._scope.pop()
 
