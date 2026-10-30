@@ -263,89 +263,45 @@ def build_documentation_reports(
     )
 
 
-def print_documentation_summary(
-    summary: DocumentationReportsSummary,
-) -> None:
-    print(
-        "\nDocumentation report summary:"
-    )
+def print_documentation_summary(summary: DocumentationReportsSummary) -> None:
+    print("\nDocumentation report summary:")
 
-    for item in (
-        summary.public,
-        summary.private,
-    ):
-        print(
-            f"  {item.source_label}/: "
-            + (
-                "found"
-                if item.exists
-                else "not found"
-            )
-        )
+    for item in (summary.public, summary.private):
+        print(f"  {item.source_label}/: " + ("found" if item.exists else "not found"))
 
         if not item.exists:
-            print(
-                "    Report: not generated"
-            )
+            print("    Report: not generated")
             continue
 
         if item.ignore_overridden:
             print(
                 "    Project Sniffer ignore policy: "
-                "private-scope exclusion overridden "
-                "for this run"
+                "private-scope exclusion overridden for this run"
             )
 
         elif item.ignored_by_config:
-            print(
-                "    Project Sniffer ignore policy: "
-                "entire scope excluded"
-            )
+            print("    Project Sniffer ignore policy: entire scope excluded")
 
-        report_summary = (
-            item.report_summary
-        )
+        report_summary = item.report_summary
 
         if report_summary is None:
-            print(
-                "    Report: not generated"
-            )
+            print("    Report: not generated")
             continue
 
+        print(f"    Added text files: {report_summary.added_files}")
+        print(f"    Skipped binary files: {report_summary.skipped_binary_files}")
+        print(f"    Skipped oversized files: {report_summary.skipped_oversized_files}")
         print(
-            "    Added text files: "
-            f"{report_summary.added_files}"
+            f"    Skipped unreadable files: {report_summary.skipped_unreadable_files}"
         )
+        print(f"    Skipped symlink files: {report_summary.skipped_symlink_files}")
         print(
-            "    Skipped binary files: "
-            f"{report_summary.skipped_binary_files}"
-        )
-        print(
-            "    Skipped oversized files: "
-            f"{report_summary.skipped_oversized_files}"
-        )
-        print(
-            "    Skipped unreadable files: "
-            f"{report_summary.skipped_unreadable_files}"
-        )
-        print(
-            "    Skipped symlink files: "
-            f"{report_summary.skipped_symlink_files}"
-        )
-        print(
-            "    Skipped unsafe-path files: "
-            f"{report_summary.skipped_unsafe_path_files}"
+            f"    Skipped unsafe-path files: {report_summary.skipped_unsafe_path_files}"
         )
         print(
             "    Skipped markdown-error files: "
             f"{report_summary.skipped_markdown_error_files}"
         )
-        print(
-            f"    Report: "
-            f"{report_summary.output_path}"
-        )
+        print(f"    Report: {report_summary.output_path}")
 
-    print(
-        "  Documentation reports generated: "
-        f"{summary.generated_reports}"
-    )
+    print(f"  Documentation reports generated: {summary.generated_reports}")
