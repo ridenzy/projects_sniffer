@@ -5,9 +5,7 @@ from pathlib import Path
 
 from pathspec import GitIgnoreSpec
 
-from project_sniffer.scanning.errors import (
-    ScanError,
-)
+from project_sniffer.scanning.errors import ScanError
 
 
 @dataclass(frozen=True)
@@ -18,12 +16,8 @@ class GitIgnoreRuleSet:
 
 
 class GitIgnoreMatcher:
-    def __init__(
-        self,
-    ) -> None:
-        self._rule_sets: list[
-            GitIgnoreRuleSet
-        ] = []
+    def __init__(self) -> None:
+        self._rule_sets: list[GitIgnoreRuleSet] = []
 
     def load_directory(
         self,
@@ -31,10 +25,7 @@ class GitIgnoreMatcher:
         directory_path: Path,
         relative_directory: str,
     ) -> None:
-        source_path = (
-            directory_path
-            / ".gitignore"
-        )
+        source_path = directory_path / ".gitignore"
 
         if source_path.is_symlink():
             return
@@ -43,23 +34,16 @@ class GitIgnoreMatcher:
             return
 
         try:
-            lines = source_path.read_text(
-                encoding="utf-8-sig"
-            ).splitlines()
+            lines = source_path.read_text(encoding="utf-8-sig").splitlines()
 
-        except (
-            OSError,
-            UnicodeError,
-        ) as error:
+        except (OSError, UnicodeError) as error:
             raise ScanError(
                 "Could not read target-project "
                 f".gitignore at {source_path}: {error}"
             ) from error
 
         try:
-            spec = GitIgnoreSpec.from_lines(
-                lines
-            )
+            spec = GitIgnoreSpec.from_lines(lines)
 
         except ValueError as error:
             raise ScanError(
@@ -69,11 +53,7 @@ class GitIgnoreMatcher:
 
         self._rule_sets.append(
             GitIgnoreRuleSet(
-                base_directory=(
-                    relative_directory
-                    .replace("\\", "/")
-                    .strip("/")
-                ),
+                base_directory=relative_directory.replace("\\", "/").strip("/"),
                 source_path=source_path,
                 spec=spec,
             )
@@ -85,11 +65,7 @@ class GitIgnoreMatcher:
         relative_path: str,
         base_directory: str,
     ) -> str | None:
-        normalized = (
-            relative_path
-            .replace("\\", "/")
-            .lstrip("/")
-        )
+        normalized = relative_path.replace("\\", "/").lstrip("/")
 
         if not base_directory:
             return normalized
@@ -97,21 +73,12 @@ class GitIgnoreMatcher:
         if normalized == base_directory:
             return ""
 
-        prefix = (
-            base_directory
-            + "/"
-        )
+        prefix = base_directory + "/"
 
-        if not normalized.startswith(
-            prefix
-        ):
+        if not normalized.startswith(prefix):
             return None
 
-        return normalized[
-            len(
-                prefix
-            ):
-        ]
+        return normalized[len(prefix):]
 
     def _is_ignored(
         self,
@@ -122,32 +89,20 @@ class GitIgnoreMatcher:
         ignored = False
 
         for rule_set in self._rule_sets:
-            candidate = (
-                self._path_relative_to_rule_set(
-                    relative_path=relative_path,
-                    base_directory=(
-                        rule_set.base_directory
-                    ),
-                )
+            candidate = self._path_relative_to_rule_set(
+                relative_path=relative_path, base_directory=rule_set.base_directory
             )
 
             if candidate is None:
                 continue
 
             if is_directory:
-                candidate = (
-                    candidate.rstrip("/")
-                    + "/"
-                )
+                candidate = candidate.rstrip("/") + "/"
 
-            result = rule_set.spec.check_file(
-                candidate
-            )
+            result = rule_set.spec.check_file(candidate)
 
             if result.include is not None:
-                ignored = bool(
-                    result.include
-                )
+                ignored = bool(result.include)
 
         return ignored
 
