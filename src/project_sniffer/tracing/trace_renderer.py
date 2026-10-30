@@ -135,41 +135,17 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
         f"- Call resolutions: {len(graph.call_resolutions)}",
         f"- Confirmed internal edges: {len(graph.edges)}",
         f"- Resolved internal imports: {len(resolved)}",
-        (
-            "- Resolved internal calls: "
-            f"{len(resolved_calls)}"
-        ),
-        (
-            "- Confirmed caller endpoints: "
-            f"{len(call_index.outbound)}"
-        ),
-        (
-            "- Confirmed callee endpoints: "
-            f"{len(call_index.inbound)}"
-        ),
+        f"- Resolved internal calls: {len(resolved_calls)}",
+        f"- Confirmed caller endpoints: {len(call_index.outbound)}",
+        f"- Confirmed callee endpoints: {len(call_index.inbound)}",
         f"- Unresolved imports: {len(unresolved)}",
         f"- Ambiguous imports: {len(ambiguous)}",
         f"- Invalid relative imports: {len(invalid_relative)}",
-        (
-            "- Potential internal calls: "
-            f"{len(potential_calls)}"
-        ),
-        (
-            "- Unresolved calls: "
-            f"{len(unresolved_calls)}"
-        ),
-        (
-            "- Ambiguous calls: "
-            f"{len(ambiguous_calls)}"
-        ),
-        (
-            "- Dynamic calls: "
-            f"{len(dynamic_calls)}"
-        ),
-        (
-            "- Shadowed calls: "
-            f"{len(shadowed_calls)}"
-        ),
+        f"- Potential internal calls: {len(potential_calls)}",
+        f"- Unresolved calls: {len(unresolved_calls)}",
+        f"- Ambiguous calls: {len(ambiguous_calls)}",
+        f"- Dynamic calls: {len(dynamic_calls)}",
+        f"- Shadowed calls: {len(shadowed_calls)}",
         "",
         "## Confirmed internal dependencies",
         "",
@@ -177,20 +153,11 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
 
     if graph.edges:
         for edge in graph.edges:
-            scope = (
-                edge.scope
-                if edge.scope is not None
-                else "<module>"
-            )
+            scope = edge.scope if edge.scope is not None else "<module>"
 
-            if (
-                edge.kind
-                is DependencyKind.CALL
-            ):
+            if edge.kind is DependencyKind.CALL:
                 target_symbol = (
-                    edge.target_symbol
-                    if edge.target_symbol
-                    is not None
+                    edge.target_symbol if edge.target_symbol is not None
                     else "<unknown>"
                 )
 
@@ -213,17 +180,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                     f"scope `{scope}`)"
                 )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Confirmed calls by caller",
-            "",
-        ]
-    )
+    lines.extend(["", "## Confirmed calls by caller", ""])
 
     if call_index.outbound:
         for entry in call_index.outbound:
@@ -234,8 +193,7 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
 
             for edge in entry.edges:
                 target_symbol = (
-                    edge.target_symbol
-                    if edge.target_symbol is not None
+                    edge.target_symbol if edge.target_symbol is not None
                     else "<unknown>"
                 )
 
@@ -246,17 +204,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                     f"(line {edge.line})"
                 )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Confirmed calls by callee",
-            "",
-        ]
-    )
+    lines.extend(["", "## Confirmed calls by callee", ""])
 
     if call_index.inbound:
         for entry in call_index.inbound:
@@ -273,17 +223,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                     f"(line {edge.line})"
                 )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Unresolved imports",
-            "",
-        ]
-    )
+    lines.extend(["", "## Unresolved imports", ""])
 
     if unresolved:
         for resolution in unresolved:
@@ -295,17 +237,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"`{_requested_label(resolution)}`"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Ambiguous imports",
-            "",
-        ]
-    )
+    lines.extend(["", "## Ambiguous imports", ""])
 
     if ambiguous:
         for resolution in ambiguous:
@@ -319,17 +253,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"`{_candidate_label(resolution)}`"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Invalid relative imports",
-            "",
-        ]
-    )
+    lines.extend(["", "## Invalid relative imports", ""])
 
     if invalid_relative:
         for resolution in invalid_relative:
@@ -339,21 +265,10 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"{resolution.evidence.line}"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
 
-    lines.extend(
-        [
-            "",
-            (
-                "## Potential internal calls "
-                "(not confirmed edges)"
-            ),
-            "",
-        ]
-    )
+    lines.extend(["", "## Potential internal calls (not confirmed edges)", ""])
 
     if potential_calls:
         for resolution in potential_calls:
@@ -368,24 +283,15 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"`{_scope_label(resolution.evidence.scope)}`)"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Shadowed call candidates",
-            "",
-        ]
-    )
+    lines.extend(["", "## Shadowed call candidates", ""])
 
     if shadowed_calls:
         for resolution in shadowed_calls:
             reason = (
                 resolution.shadowed_by.value
-                if resolution.shadowed_by
-                is not None
+                if resolution.shadowed_by is not None
                 else "unknown"
             )
 
@@ -400,18 +306,10 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
             )
 
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
 
-    lines.extend(
-        [
-            "",
-            "## Unresolved calls",
-            "",
-        ]
-    )
+    lines.extend(["", "## Unresolved calls", ""])
 
     if unresolved_calls:
         for resolution in unresolved_calls:
@@ -424,17 +322,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"`{_scope_label(resolution.evidence.scope)}`)"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Ambiguous call candidates",
-            "",
-        ]
-    )
+    lines.extend(["", "## Ambiguous call candidates", ""])
 
     if ambiguous_calls:
         for resolution in ambiguous_calls:
@@ -447,17 +337,9 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"`{_call_candidate_label(resolution)}`"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    lines.extend(
-        [
-            "",
-            "## Dynamic calls",
-            "",
-        ]
-    )
+    lines.extend(["", "## Dynamic calls", ""])
 
     if dynamic_calls:
         for resolution in dynamic_calls:
@@ -471,13 +353,6 @@ def render_dependency_graph(graph: DependencyGraph) -> str:
                 f"`{_scope_label(resolution.evidence.scope)}`)"
             )
     else:
-        lines.append(
-            "- None."
-        )
+        lines.append("- None.")
 
-    return (
-        "\n".join(
-            lines
-        )
-        + "\n"
-    )
+    return "\n".join(lines) + "\n"
