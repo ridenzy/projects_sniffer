@@ -29,14 +29,8 @@ def empty_ignore_config() -> IgnoreConfig:
     }
 
 
-def _validate_ignore_config(
-    data: Any,
-    source: str,
-) -> IgnoreConfig:
-    if not isinstance(
-        data,
-        dict,
-    ):
+def _validate_ignore_config(data: Any, source: str) -> IgnoreConfig:
+    if not isinstance(data, dict):
         raise ConfigurationError(
             f"{source} must contain a JSON object."
         )
@@ -44,46 +38,26 @@ def _validate_ignore_config(
     validated = empty_ignore_config()
 
     for key in validated:
-        value = data.get(
-            key,
-            [],
-        )
+        value = data.get(key, [])
 
-        if not isinstance(
-            value,
-            list,
-        ):
+        if not isinstance(value, list):
             raise ConfigurationError(
                 f"{source}: {key} must be a list."
             )
 
-        if not all(
-            isinstance(
-                item,
-                str,
-            )
-            for item in value
-        ):
+        if not all(isinstance(item, str) for item in value):
             raise ConfigurationError(
                 f"{source}: {key} must contain only strings."
             )
 
-        validated[key] = list(
-            value
-        )
+        validated[key] = list(value)
 
     return validated
 
 
-def _read_json_file(
-    path: Path,
-) -> Any:
+def _read_json_file(path: Path) -> Any:
     try:
-        return json.loads(
-            path.read_text(
-                encoding="utf-8"
-            )
-        )
+        return json.loads(path.read_text(encoding="utf-8"))
 
     except (
         OSError,
@@ -103,31 +77,16 @@ def get_personal_registry_path() -> Path:
     """
 
     return (
-        Path(__file__)
-        .resolve()
-        .parent
-        .parent
-        / "resources"
+        Path(__file__).resolve().parent.parent / "resources"
         / _PERSONAL_REGISTRY_FILENAME
     )
 
 
 def load_recommended_ignores() -> IgnoreConfig:
-    resource = (
-        files(
-            "project_sniffer.resources"
-        )
-        .joinpath(
-            "recommended_ignores.json"
-        )
-    )
+    resource = files("project_sniffer.resources").joinpath("recommended_ignores.json")
 
     try:
-        data = json.loads(
-            resource.read_text(
-                encoding="utf-8"
-            )
-        )
+        data = json.loads(resource.read_text(encoding="utf-8"))
 
     except (
         OSError,
@@ -145,21 +104,14 @@ def load_recommended_ignores() -> IgnoreConfig:
 
 
 def _optional_profile_string(
-    profile: dict[str, Any],
-    key: str,
-    source: str,
+    profile: dict[str, Any], key: str, source: str
 ) -> str | None:
-    value = profile.get(
-        key
-    )
+    value = profile.get(key)
 
     if value is None:
         return None
 
-    if not isinstance(
-        value,
-        str,
-    ):
+    if not isinstance(value, str):
         raise ConfigurationError(
             f"{source}: {key} must be a string."
         )
@@ -187,23 +139,11 @@ def _profile_match_specificity(
         source,
     )
 
-    root_path_value = (
-        _optional_profile_string(
-            profile,
-            "ROOT_PATH",
-            source,
-        )
-    )
+    root_path_value = _optional_profile_string(profile, "ROOT_PATH", source)
 
     if root_path_value is not None:
         try:
-            configured_root = (
-                Path(
-                    root_path_value
-                )
-                .expanduser()
-                .resolve()
-            )
+            configured_root = Path(root_path_value).expanduser().resolve()
 
         except (
             OSError,
@@ -217,18 +157,10 @@ def _profile_match_specificity(
         if configured_root != project_path:
             return None
 
-        if (
-            root_name is not None
-            and root_name
-            != project_path.name
-        ):
+        if root_name is not None and root_name != project_path.name:
             return None
 
-        return (
-            3
-            if root_name is not None
-            else 2
-        )
+        return 3 if root_name is not None else 2
 
     if root_name is not None:
         if root_name == project_path.name:
@@ -426,10 +358,7 @@ def load_personal_ignores(
         path
     )
 
-    if not isinstance(
-        data,
-        dict,
-    ):
+    if not isinstance(data, dict):
         raise ConfigurationError(
             f"{path} must contain a JSON object."
         )
