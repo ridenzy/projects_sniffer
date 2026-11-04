@@ -2,21 +2,11 @@ from __future__ import annotations
 
 import ast
 import symtable
-
 from collections.abc import Sequence
 
-from project_sniffer.evidence import (
-    SourceLanguage,
-)
-from project_sniffer.indexing import (
-    IndexedSymbol,
-    SemanticProjectIndex,
-)
-from project_sniffer.parsing import (
-    CallTargetKind,
-    DynamicCallKind,
-    SymbolKind,
-)
+from project_sniffer.evidence import SourceLanguage
+from project_sniffer.indexing import IndexedSymbol, SemanticProjectIndex
+from project_sniffer.parsing import CallTargetKind, DynamicCallKind, SymbolKind
 from project_sniffer.tracing.models import (
     CallResolution,
     CallResolutionStatus,
@@ -26,43 +16,25 @@ from project_sniffer.tracing.models import (
     ImportResolution,
     ImportResolutionStatus,
 )
-from project_sniffer.tracing.python.inheritance import (
-    direct_plain_base_name,
-)
+from project_sniffer.tracing.python.inheritance import direct_plain_base_name
 
 
-def _language_by_path(
-    index: SemanticProjectIndex,
-) -> dict[str, SourceLanguage]:
+def _language_by_path(index: SemanticProjectIndex) -> dict[str, SourceLanguage]:
     return {
-        (
-            parsed
-            .source
-            .read_result
-            .scanned_file
-            .relative_path
-        ): parsed.source.language
-        for parsed
-        in index.parsed_sources
+        parsed.source.read_result.scanned_file.relative_path: parsed.source.language
+        for parsed in index.parsed_sources
     }
 
 
-def _top_level_target(
-    symbol: IndexedSymbol,
-) -> CallTarget | None:
+def _top_level_target(symbol: IndexedSymbol) -> CallTarget | None:
     evidence = symbol.evidence
 
-    if (
-        evidence.qualified_name
-        != evidence.name
-    ):
+    if evidence.qualified_name != evidence.name:
         return None
 
     return CallTarget(
         source_path=symbol.source_path,
-        qualified_name=(
-            evidence.qualified_name
-        ),
+        qualified_name=evidence.qualified_name,
         kind=evidence.kind,
         line=evidence.line,
     )
@@ -70,34 +42,17 @@ def _top_level_target(
 
 def _build_top_level_symbol_index(
     index: SemanticProjectIndex,
-) -> dict[
-    tuple[str, str],
-    tuple[CallTarget, ...],
-]:
-    targets: dict[
-        tuple[str, str],
-        list[CallTarget],
-    ] = {}
+) -> dict[tuple[str, str], tuple[CallTarget, ...]]:
+    targets: dict[tuple[str, str], list[CallTarget]] = {}
 
     for symbol in index.symbols:
-        target = _top_level_target(
-            symbol
-        )
+        target = _top_level_target(symbol)
 
         if target is None:
             continue
 
-        key = (
-            symbol.source_path,
-            symbol.evidence.name,
-        )
-
-        targets.setdefault(
-            key,
-            [],
-        ).append(
-            target
-        )
+        key = (symbol.source_path, symbol.evidence.name)
+        targets.setdefault(key, []).append(target)
 
     return {
         key: tuple(
@@ -111,45 +66,25 @@ def _build_top_level_symbol_index(
                 ),
             )
         )
-        for key, values
-        in targets.items()
+        for key, values in targets.items()
     }
 
 
 def _build_qualified_symbol_index(
     index: SemanticProjectIndex,
-) -> dict[
-    tuple[str, str],
-    tuple[CallTarget, ...],
-]:
-    targets: dict[
-        tuple[str, str],
-        list[CallTarget],
-    ] = {}
+) -> dict[tuple[str, str], tuple[CallTarget, ...]]:
+    targets: dict[tuple[str, str], list[CallTarget]] = {}
 
     for symbol in index.symbols:
         evidence = symbol.evidence
-
         target = CallTarget(
             source_path=symbol.source_path,
-            qualified_name=(
-                evidence.qualified_name
-            ),
+            qualified_name=evidence.qualified_name,
             kind=evidence.kind,
             line=evidence.line,
         )
-
-        key = (
-            symbol.source_path,
-            evidence.qualified_name,
-        )
-
-        targets.setdefault(
-            key,
-            [],
-        ).append(
-            target
-        )
+        key = (symbol.source_path, evidence.qualified_name)
+        targets.setdefault(key, []).append(target)
 
     return {
         key: tuple(
@@ -163,51 +98,33 @@ def _build_qualified_symbol_index(
                 ),
             )
         )
-        for key, values
-        in targets.items()
+        for key, values in targets.items()
     }
 
 
-def _binding_is_visible(
-    binding_scope: str | None,
-    call_scope: str | None,
-) -> bool:
+def _binding_is_visible(binding_scope: str | None, call_scope: str | None) -> bool:
     if binding_scope is None:
         return True
 
     if call_scope is None:
         return False
 
-    return (
-        call_scope == binding_scope
-        or call_scope.startswith(
-            f"{binding_scope}."
-        )
-    )
+    return call_scope == binding_scope or call_scope.startswith(f"{binding_scope}.")
 
 
-def _import_bound_name(
-    resolution: ImportResolution,
-) -> str | None:
+def _import_bound_name(resolution: ImportResolution) -> str | None:
     evidence = resolution.evidence
 
     if evidence.imported_name is None:
         return None
 
-    return (
-        evidence.alias
-        or evidence.imported_name
-    )
+    return evidence.alias or evidence.imported_name
 
-def _module_import_bound_name(
-    resolution: ImportResolution,
-) -> str | None:
+
+def _module_import_bound_name(resolution: ImportResolution) -> str | None:
     evidence = resolution.evidence
 
-    if (
-        evidence.imported_name is not None
-        or evidence.module is None
-    ):
+    if evidence.imported_name is not None or evidence.module is None:
         return None
 
     if evidence.alias is not None:
@@ -218,9 +135,8 @@ def _module_import_bound_name(
 
     return evidence.module
 
-def _ordered_unique_targets(
-    targets: Sequence[CallTarget],
-) -> tuple[CallTarget, ...]:
+
+def _ordered_unique_targets(targets: Sequence[CallTarget]) -> tuple[CallTarget, ...]:
     unique = {
         (
             target.source_path,
