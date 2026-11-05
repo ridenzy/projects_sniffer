@@ -392,265 +392,92 @@ def _executes_in_module_scope(
     return False
 
 
-def _module_binding_sites(
-    tree: ast.Module,
-    name: str,
-) -> tuple[
-    tuple[str, int],
-    ...,
-]:
+def _module_binding_sites(tree: ast.Module, name: str) -> tuple[tuple[str, int], ...]:
     """
     Find direct syntactic bindings that can affect a module name.
 
     Nested function/class-local bindings are ignored. Assignment expressions
     are treated conservatively wherever they occur.
     """
+    parent_by_child = _ast_parent_map(tree)
+    sites: list[tuple[str, int]] = []
 
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
-
-    sites: list[
-        tuple[str, int]
-    ] = []
-
-    for node in ast.walk(
-        tree
-    ):
+    for node in ast.walk(tree):
         if (
-            isinstance(
-                node,
-                ast.NamedExpr,
-            )
-            and isinstance(
-                node.target,
-                ast.Name,
-            )
+            isinstance(node, ast.NamedExpr)
+            and isinstance(node.target, ast.Name)
             and node.target.id == name
         ):
-            sites.append(
-                (
-                    "named_expression",
-                    node.lineno,
-                )
-            )
-
+            sites.append(("named_expression", node.lineno))
             continue
 
-        if not _executes_in_module_scope(
-            node,
-            parent_by_child,
-        ):
+        if not _executes_in_module_scope(node, parent_by_child):
             continue
 
-        if isinstance(
-            node,
-            (
-                ast.FunctionDef,
-                ast.AsyncFunctionDef,
-                ast.ClassDef,
-            ),
-        ):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             if node.name == name:
-                sites.append(
-                    (
-                        "definition",
-                        node.lineno,
-                    )
-                )
-
+                sites.append(("definition", node.lineno))
             continue
 
-        if isinstance(
-            node,
-            ast.Import,
-        ):
+        if isinstance(node, ast.Import):
             for alias in node.names:
-                bound_name = (
-                    alias.asname
-                    or alias.name.split(
-                        "."
-                    )[0]
-                )
-
+                bound_name = alias.asname or alias.name.split(".")[0]
                 if bound_name == name:
-                    sites.append(
-                        (
-                            "import",
-                            node.lineno,
-                        )
-                    )
-
+                    sites.append(("import", node.lineno))
             continue
 
-        if isinstance(
-            node,
-            ast.ImportFrom,
-        ):
+        if isinstance(node, ast.ImportFrom):
             for alias in node.names:
                 if alias.name == "*":
-                    sites.append(
-                        (
-                            "star_import",
-                            node.lineno,
-                        )
-                    )
-
+                    sites.append(("star_import", node.lineno))
                     continue
 
-                bound_name = (
-                    alias.asname
-                    or alias.name
-                )
-
+                bound_name = alias.asname or alias.name
                 if bound_name == name:
-                    sites.append(
-                        (
-                            "import",
-                            node.lineno,
-                        )
-                    )
-
+                    sites.append(("import", node.lineno))
             continue
 
         if (
-            isinstance(
-                node,
-                ast.Name,
-            )
+            isinstance(node, ast.Name)
             and node.id == name
-            and isinstance(
-                node.ctx,
-                (
-                    ast.Store,
-                    ast.Del,
-                ),
-            )
+            and isinstance(node.ctx, (ast.Store, ast.Del))
         ):
-            sites.append(
-                (
-                    "name_binding",
-                    node.lineno,
-                )
-            )
-
+            sites.append(("name_binding", node.lineno))
             continue
 
-        if (
-            isinstance(
-                node,
-                ast.ExceptHandler,
-            )
-            and node.name == name
-        ):
-            sites.append(
-                (
-                    "exception_binding",
-                    node.lineno,
-                )
-            )
-
+        if isinstance(node, ast.ExceptHandler) and node.name == name:
+            sites.append(("exception_binding", node.lineno))
             continue
 
-        if (
-            isinstance(
-                node,
-                ast.MatchAs,
-            )
-            and node.name == name
-        ):
-            sites.append(
-                (
-                    "match_binding",
-                    node.lineno,
-                )
-            )
-
+        if isinstance(node, ast.MatchAs) and node.name == name:
+            sites.append(("match_binding", node.lineno))
             continue
 
-        if (
-            isinstance(
-                node,
-                ast.MatchStar,
-            )
-            and node.name == name
-        ):
-            sites.append(
-                (
-                    "match_binding",
-                    node.lineno,
-                )
-            )
-
+        if isinstance(node, ast.MatchStar) and node.name == name:
+            sites.append(("match_binding", node.lineno))
             continue
 
-        if (
-            isinstance(
-                node,
-                ast.MatchMapping,
-            )
-            and node.rest == name
-        ):
-            sites.append(
-                (
-                    "match_binding",
-                    node.lineno,
-                )
-            )
+        if isinstance(node, ast.MatchMapping) and node.rest == name:
+            sites.append(("match_binding", node.lineno))
 
-    return tuple(
-        sites
-    )
+    return tuple(sites)
 
 
-def _definition_matches_target(
-    node: ast.stmt,
-    target: CallTarget,
-) -> bool:
-    if (
-        getattr(
-            node,
-            "lineno",
-            None,
-        )
-        != target.line
-    ):
+def _definition_matches_target(node: ast.stmt, target: CallTarget) -> bool:
+    if getattr(node, "lineno", None) != target.line:
         return False
 
-    if isinstance(
-        node,
-        ast.FunctionDef,
-    ):
+    if isinstance(node, ast.FunctionDef):
+        return node.name == target.qualified_name and target.kind is SymbolKind.FUNCTION
+
+    if isinstance(node, ast.AsyncFunctionDef):
         return (
-            node.name
-            == target.qualified_name
-            and target.kind
-            is SymbolKind.FUNCTION
+            node.name == target.qualified_name
+            and target.kind is SymbolKind.ASYNC_FUNCTION
         )
 
-    if isinstance(
-        node,
-        ast.AsyncFunctionDef,
-    ):
-        return (
-            node.name
-            == target.qualified_name
-            and target.kind
-            is SymbolKind.ASYNC_FUNCTION
-        )
-
-    if isinstance(
-        node,
-        ast.ClassDef,
-    ):
-        return (
-            node.name
-            == target.qualified_name
-            and target.kind
-            is SymbolKind.CLASS
-        )
+    if isinstance(node, ast.ClassDef):
+        return node.name == target.qualified_name and target.kind is SymbolKind.CLASS
 
     return False
 
@@ -661,85 +488,38 @@ def _confirmed_same_file_target(
     target_name: str,
     call_line: int,
     call_executes_during_module_initialization: bool,
-    ordered_candidates: tuple[
-        CallTarget,
-        ...,
-    ],
-    same_file_candidates: Sequence[
-        CallTarget
-    ],
-) -> tuple[
-    CallTarget | None,
-    CallResolutionProof | None,
-]:
-    if (
-        tree is None
-        or len(
-            ordered_candidates
-        ) != 1
-    ):
+    ordered_candidates: tuple[CallTarget, ...],
+    same_file_candidates: Sequence[CallTarget],
+) -> tuple[CallTarget | None, CallResolutionProof | None]:
+    if tree is None or len(ordered_candidates) != 1:
         return None, None
 
     target = ordered_candidates[0]
-
     matching_same_file_targets = tuple(
-        candidate
-        for candidate
-        in same_file_candidates
-        if candidate == target
+        candidate for candidate in same_file_candidates if candidate == target
     )
-
-    if len(
-        matching_same_file_targets
-    ) != 1:
+    if len(matching_same_file_targets) != 1:
         return None, None
 
-    if (
-        call_executes_during_module_initialization
-        and target.line >= call_line
-    ):
+    if call_executes_during_module_initialization and target.line >= call_line:
         return None, None
 
     definition = next(
-        (
-            node
-            for node in tree.body
-            if _definition_matches_target(
-                node,
-                target,
-            )
-        ),
+        (node for node in tree.body if _definition_matches_target(node, target)),
         None,
     )
-
     if definition is None:
         return None, None
 
     if definition.decorator_list:
         return None, None
 
-    binding_sites = (
-        _module_binding_sites(
-            tree,
-            target_name,
-        )
-    )
-
-    if binding_sites != (
-        (
-            "definition",
-            target.line,
-        ),
-    ):
+    binding_sites = _module_binding_sites(tree, target_name)
+    if binding_sites != (("definition", target.line),):
         return None, None
 
-    return (
-        target,
-        (
-            CallResolutionProof
-            .SAME_FILE_STABLE_BINDING
-        ),
-    )
+    return target, CallResolutionProof.SAME_FILE_STABLE_BINDING
+
 
 def _attribute_call_has_implicit_scope(
     *,
