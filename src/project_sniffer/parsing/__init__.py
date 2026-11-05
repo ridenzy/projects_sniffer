@@ -1,6 +1,4 @@
-from project_sniffer.parsing.dispatcher import (
-    parse_source_evidence,
-)
+from project_sniffer.parsing.dispatcher import parse_source_evidence
 from project_sniffer.parsing.models import (
     ImportEvidence,
     ParsedSource,

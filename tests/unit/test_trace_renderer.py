@@ -52,10 +52,7 @@ class TraceRendererTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=read_result,
-            language=SourceLanguage.PYTHON,
-        )
+        return SourceEvidence(read_result=read_result, language=SourceLanguage.PYTHON)
 
     def test_renderer_preserves_confirmed_and_uncertain_evidence(
         self,
@@ -85,13 +82,9 @@ class TraceRendererTests(
             )
         )
 
-        graph = build_dependency_graph(
-            index
-        )
+        graph = build_dependency_graph(index)
 
-        rendered = render_dependency_graph(
-            graph
-        )
+        rendered = render_dependency_graph(graph)
 
         self.assertIn(
             "- Potential internal calls: 0",
@@ -198,11 +191,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             (
@@ -252,11 +241,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             (
@@ -299,11 +284,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             (
@@ -347,11 +328,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             (
@@ -398,11 +375,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             (
@@ -481,9 +454,7 @@ class TraceRendererTests(
         index = build_semantic_project_index(
             (self.evidence("pkg/app.py", source),)
         )
-        rendered = render_dependency_graph(
-            build_dependency_graph(index)
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         required = (
             "- Resolved internal calls: 3",
@@ -571,11 +542,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             "- Resolved internal calls: 3",
@@ -653,11 +620,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             "- Resolved internal calls: 3",
@@ -725,11 +688,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(
-                index
-            )
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             "- Dynamic calls: 2",
@@ -779,9 +738,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(index)
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn(
             "- Resolved internal calls: 3",
@@ -882,9 +839,7 @@ class TraceRendererTests(
             )
         )
 
-        rendered = render_dependency_graph(
-            build_dependency_graph(index)
-        )
+        rendered = render_dependency_graph(build_dependency_graph(index))
 
         self.assertIn("- Resolved internal calls: 3", rendered)
         self.assertIn("- Confirmed caller endpoints: 2", rendered)

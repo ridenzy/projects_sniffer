@@ -1,9 +1,5 @@
-from project_sniffer.tracing.call_index import (
-    build_call_index,
-)
-from project_sniffer.tracing.dependency_graph import (
-    build_dependency_graph,
-)
+from project_sniffer.tracing.call_index import build_call_index
+from project_sniffer.tracing.dependency_graph import build_dependency_graph
 from project_sniffer.tracing.models import (
     CallEndpoint,
     CallIndex,
@@ -19,13 +15,8 @@ from project_sniffer.tracing.models import (
     ImportResolution,
     ImportResolutionStatus,
 )
-from project_sniffer.tracing.python import (
-    resolve_python_calls,
-    resolve_python_imports,
-)
-from project_sniffer.tracing.trace_renderer import (
-    render_dependency_graph,
-)
+from project_sniffer.tracing.python import resolve_python_calls, resolve_python_imports
+from project_sniffer.tracing.trace_renderer import render_dependency_graph
 
 
 __all__ = [

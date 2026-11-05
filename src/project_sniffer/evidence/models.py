@@ -178,10 +178,7 @@ class SourceLanguage(str, Enum):
         if self is SourceLanguage.VISUAL_BASIC:
             return "vbnet"
 
-        if self in {
-            SourceLanguage.PLAIN_TEXT,
-            SourceLanguage.UNKNOWN,
-        }:
+        if self in {SourceLanguage.PLAIN_TEXT, SourceLanguage.UNKNOWN}:
             return "text"
 
         return self.value

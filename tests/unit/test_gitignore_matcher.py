@@ -16,13 +16,9 @@ class GitIgnoreMatcherTests(
     def setUp(
         self,
     ) -> None:
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.project = Path(
-            self.temporary_directory.name
-        )
+        self.project = Path(self.temporary_directory.name)
 
     def tearDown(
         self,

@@ -18,13 +18,9 @@ from project_sniffer.scanning.models import (
 
 class BoundedReaderTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.project = Path(
-            self.temporary_directory.name
-        )
+        self.project = Path(self.temporary_directory.name)
 
     def tearDown(self) -> None:
         self.temporary_directory.cleanup()
@@ -33,13 +29,7 @@ class BoundedReaderTests(unittest.TestCase):
         self,
         relative_path: str,
     ) -> ScannedFile:
-        return ScannedFile(
-            absolute_path=(
-                self.project
-                / relative_path
-            ),
-            relative_path=relative_path,
-        )
+        return ScannedFile(absolute_path=self.project / relative_path, relative_path=relative_path)
 
     def test_oversized_text_file_is_classified_without_content(
         self,
@@ -61,14 +51,9 @@ class BoundedReaderTests(unittest.TestCase):
             max_source_bytes=16,
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.OVERSIZED,
-        )
+        self.assertEqual(result.status, FileReadStatus.OVERSIZED)
 
-        self.assertIsNone(
-            result.content
-        )
+        self.assertIsNone(result.content)
 
         self.assertEqual(
             result.size_bytes,
@@ -96,10 +81,7 @@ class BoundedReaderTests(unittest.TestCase):
             max_source_bytes=8,
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.BINARY,
-        )
+        self.assertEqual(result.status, FileReadStatus.BINARY)
 
         self.assertEqual(
             result.size_bytes,
@@ -141,9 +123,7 @@ class BoundedReaderTests(unittest.TestCase):
     def test_nonpositive_max_source_bytes_is_rejected(
         self,
     ) -> None:
-        with self.assertRaises(
-            ValueError
-        ):
+        with self.assertRaises(ValueError):
             read_scanned_file(
                 project_path=self.project,
                 scanned_file=self.scanned_file(
@@ -169,9 +149,7 @@ class BoundedReaderTests(unittest.TestCase):
         )
 
         try:
-            os.mkfifo(
-                path
-            )
+            os.mkfifo(path)
         except OSError as error:
             self.skipTest(
                 "FIFO creation is unavailable: "
@@ -185,10 +163,7 @@ class BoundedReaderTests(unittest.TestCase):
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.UNREADABLE,
-        )
+        self.assertEqual(result.status, FileReadStatus.UNREADABLE)
 
         self.assertEqual(
             result.error_type,

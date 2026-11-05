@@ -54,24 +54,15 @@ class PythonImportResolutionTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=result,
-            language=SourceLanguage.PYTHON,
-        )
+        return SourceEvidence(read_result=result, language=SourceLanguage.PYTHON)
 
     def resolve(
         self,
         *evidence: SourceEvidence,
     ):
-        index = (
-            build_semantic_project_index(
-                evidence
-            )
-        )
+        index = build_semantic_project_index(evidence)
 
-        return resolve_python_imports(
-            index
-        )
+        return resolve_python_imports(index)
 
     def test_relative_import_resolves_internal_file(
         self,
@@ -91,21 +82,13 @@ class PythonImportResolutionTests(
         )
 
         self.assertEqual(
-            len(
-                resolutions
-            ),
+            len(resolutions),
             1,
         )
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
-            ),
-        )
+        self.assertIs(resolution.status, ImportResolutionStatus.RESOLVED_INTERNAL)
 
         self.assertEqual(
             resolution.requested_modules,
@@ -139,8 +122,7 @@ class PythonImportResolutionTests(
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
+                ImportResolutionStatus.RESOLVED_INTERNAL
             ),
         )
 
@@ -173,8 +155,7 @@ class PythonImportResolutionTests(
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
+                ImportResolutionStatus.RESOLVED_INTERNAL
             ),
         )
 
@@ -199,8 +180,7 @@ class PythonImportResolutionTests(
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .UNRESOLVED
+                ImportResolutionStatus.UNRESOLVED
             ),
         )
 
@@ -229,8 +209,7 @@ class PythonImportResolutionTests(
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .AMBIGUOUS
+                ImportResolutionStatus.AMBIGUOUS
             ),
         )
 
@@ -255,8 +234,7 @@ class PythonImportResolutionTests(
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .INVALID_RELATIVE_IMPORT
+                ImportResolutionStatus.INVALID_RELATIVE_IMPORT
             ),
         )
 
@@ -278,17 +256,14 @@ class PythonImportResolutionTests(
         )
 
         self.assertEqual(
-            len(
-                resolutions
-            ),
+            len(resolutions),
             1,
         )
 
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
+                ImportResolutionStatus.RESOLVED_INTERNAL
             ),
         )
 
@@ -322,35 +297,19 @@ class PythonImportResolutionTests(
         )
 
         self.assertEqual(
-            len(
-                resolutions
-            ),
+            len(resolutions),
             1,
         )
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                ImportResolutionStatus
-                .INVALID_RELATIVE_IMPORT
-            ),
-        )
+        self.assertIs(resolution.status, ImportResolutionStatus.INVALID_RELATIVE_IMPORT)
 
-        self.assertEqual(
-            resolution.requested_modules,
-            (),
-        )
+        self.assertEqual(resolution.requested_modules, ())
 
-        self.assertIsNone(
-            resolution.target_path
-        )
+        self.assertIsNone(resolution.target_path)
 
-        self.assertEqual(
-            resolution.candidate_paths,
-            (),
-        )
+        self.assertEqual(resolution.candidate_paths, ())
 
     def test_src_source_root_is_not_relative_package_parent(
         self,
@@ -370,17 +329,14 @@ class PythonImportResolutionTests(
         )
 
         self.assertEqual(
-            len(
-                resolutions
-            ),
+            len(resolutions),
             1,
         )
 
         self.assertIs(
             resolutions[0].status,
             (
-                ImportResolutionStatus
-                .INVALID_RELATIVE_IMPORT
+                ImportResolutionStatus.INVALID_RELATIVE_IMPORT
             ),
         )
 

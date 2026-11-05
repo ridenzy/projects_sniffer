@@ -82,15 +82,8 @@ class SourceEvidenceTests(
         }
 
         for relative_path, expected in cases.items():
-            with self.subTest(
-                relative_path=relative_path
-            ):
-                self.assertEqual(
-                    classify_source_language(
-                        relative_path
-                    ),
-                    expected,
-                )
+            with self.subTest(relative_path=relative_path):
+                self.assertEqual(classify_source_language(relative_path), expected)
 
     def test_known_suffix_matching_is_case_insensitive(
         self,
@@ -115,15 +108,8 @@ class SourceEvidenceTests(
         }
 
         for relative_path, expected in cases.items():
-            with self.subTest(
-                relative_path=relative_path
-            ):
-                self.assertEqual(
-                    classify_source_language(
-                        relative_path
-                    ),
-                    expected,
-                )
+            with self.subTest(relative_path=relative_path):
+                self.assertEqual(classify_source_language(relative_path), expected)
 
     def test_unknown_language_uses_text_markdown_fence(
         self,
@@ -132,10 +118,7 @@ class SourceEvidenceTests(
             "assets/example.unknown-extension"
         )
 
-        self.assertEqual(
-            language,
-            SourceLanguage.UNKNOWN,
-        )
+        self.assertEqual(language, SourceLanguage.UNKNOWN)
 
         self.assertEqual(
             language.markdown_fence_label,
@@ -149,10 +132,7 @@ class SourceEvidenceTests(
             "scripts/install.sh"
         )
 
-        self.assertEqual(
-            language,
-            SourceLanguage.SHELL,
-        )
+        self.assertEqual(language, SourceLanguage.SHELL)
 
         self.assertEqual(
             language.markdown_fence_label,
@@ -170,22 +150,11 @@ class SourceEvidenceTests(
             "web/second.ts"
         )
 
-        evidence = build_source_evidence(
-            (
-                second,
-                first,
-            )
-        )
+        evidence = build_source_evidence((second, first))
 
         self.assertEqual(
-            tuple(
-                item.language
-                for item in evidence
-            ),
-            (
-                SourceLanguage.TYPESCRIPT,
-                SourceLanguage.PYTHON,
-            ),
+            tuple(item.language for item in evidence),
+            (SourceLanguage.TYPESCRIPT, SourceLanguage.PYTHON),
         )
 
         self.assertIs(
@@ -206,9 +175,7 @@ class SourceEvidenceTests(
             status=FileReadStatus.BINARY,
         )
 
-        evidence = build_source_evidence(
-            (binary,)
-        )
+        evidence = build_source_evidence((binary,))
 
         self.assertEqual(
             evidence[0].language,

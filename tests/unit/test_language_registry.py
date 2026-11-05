@@ -16,26 +16,11 @@ class LanguageRegistryTests(
     def test_every_source_language_has_one_definition(
         self,
     ) -> None:
-        registered = {
-            definition.language
-            for definition in LANGUAGE_DEFINITIONS
-        }
+        registered = {definition.language for definition in LANGUAGE_DEFINITIONS}
 
-        self.assertEqual(
-            registered,
-            set(
-                SourceLanguage
-            ),
-        )
+        self.assertEqual(registered, set(SourceLanguage))
 
-        self.assertEqual(
-            len(
-                LANGUAGE_DEFINITIONS
-            ),
-            len(
-                SourceLanguage
-            ),
-        )
+        self.assertEqual(len(LANGUAGE_DEFINITIONS), len(SourceLanguage))
 
     def test_required_general_languages_are_registered(
         self,
@@ -56,16 +41,9 @@ class LanguageRegistryTests(
             SourceLanguage.SWIFT,
         }
 
-        registered = {
-            definition.language
-            for definition in LANGUAGE_DEFINITIONS
-        }
+        registered = {definition.language for definition in LANGUAGE_DEFINITIONS}
 
-        self.assertTrue(
-            required.issubset(
-                registered
-            )
-        )
+        self.assertTrue(required.issubset(registered))
 
     def test_general_programming_suffixes(
         self,
@@ -85,15 +63,8 @@ class LanguageRegistryTests(
         }
 
         for path, expected in cases.items():
-            with self.subTest(
-                path=path
-            ):
-                self.assertEqual(
-                    classify_source_language(
-                        path
-                    ),
-                    expected,
-                )
+            with self.subTest(path=path):
+                self.assertEqual(classify_source_language(path), expected)
 
     def test_domain_specific_suffixes(
         self,
@@ -114,15 +85,8 @@ class LanguageRegistryTests(
         }
 
         for path, expected in cases.items():
-            with self.subTest(
-                path=path
-            ):
-                self.assertEqual(
-                    classify_source_language(
-                        path
-                    ),
-                    expected,
-                )
+            with self.subTest(path=path):
+                self.assertEqual(classify_source_language(path), expected)
 
     def test_compound_suffix_has_priority(
         self,
@@ -172,15 +136,8 @@ class LanguageRegistryTests(
         }
 
         for path, expected in cases.items():
-            with self.subTest(
-                path=path
-            ):
-                self.assertEqual(
-                    classify_source_language(
-                        path
-                    ),
-                    expected,
-                )
+            with self.subTest(path=path):
+                self.assertEqual(classify_source_language(path), expected)
 
     def test_ambiguous_extensions_are_not_guessed(
         self,
@@ -192,15 +149,8 @@ class LanguageRegistryTests(
             "src/example.sol",
             "src/example.v",
         ):
-            with self.subTest(
-                path=path
-            ):
-                self.assertEqual(
-                    classify_source_language(
-                        path
-                    ),
-                    SourceLanguage.UNKNOWN,
-                )
+            with self.subTest(path=path):
+                self.assertEqual(classify_source_language(path), SourceLanguage.UNKNOWN)
 
     def test_public_language_document_covers_registry(
         self,
@@ -218,15 +168,8 @@ class LanguageRegistryTests(
                 f"| `{definition.language.value}` |"
             )
 
-            with self.subTest(
-                language=(
-                    definition.language.value
-                )
-            ):
-                self.assertIn(
-                    marker,
-                    documentation,
-                )
+            with self.subTest(language=definition.language.value):
+                self.assertIn(marker, documentation)
 
         self.assertIn(
             (

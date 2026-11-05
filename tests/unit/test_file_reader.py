@@ -21,13 +21,9 @@ class SafeFileReaderTests(
     def setUp(
         self,
     ) -> None:
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.project = (
             self.workspace
@@ -45,13 +41,7 @@ class SafeFileReaderTests(
         self,
         relative_path: str,
     ) -> ScannedFile:
-        return ScannedFile(
-            absolute_path=(
-                self.project
-                / relative_path
-            ),
-            relative_path=relative_path,
-        )
+        return ScannedFile(absolute_path=self.project / relative_path, relative_path=relative_path)
 
     def create_symlink_or_skip(
         self,
@@ -60,13 +50,8 @@ class SafeFileReaderTests(
         link: Path,
     ) -> None:
         try:
-            link.symlink_to(
-                target
-            )
-        except (
-            OSError,
-            NotImplementedError,
-        ) as error:
+            link.symlink_to(target)
+        except (OSError, NotImplementedError) as error:
             self.skipTest(
                 "symlink creation is unavailable: "
                 f"{type(error).__name__}"
@@ -93,10 +78,7 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.TEXT,
-        )
+        self.assertEqual(result.status, FileReadStatus.TEXT)
 
         self.assertEqual(
             result.content,
@@ -131,14 +113,9 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.BINARY,
-        )
+        self.assertEqual(result.status, FileReadStatus.BINARY)
 
-        self.assertIsNone(
-            result.content
-        )
+        self.assertIsNone(result.content)
 
     def test_internal_file_symlink_is_not_followed(
         self,
@@ -159,10 +136,7 @@ class SafeFileReaderTests(
             / "link.txt"
         )
 
-        self.create_symlink_or_skip(
-            target=target,
-            link=link,
-        )
+        self.create_symlink_or_skip(target=target, link=link)
 
         result = read_scanned_file(
             project_path=self.project,
@@ -171,18 +145,11 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.SYMLINK,
-        )
+        self.assertEqual(result.status, FileReadStatus.SYMLINK)
 
-        self.assertTrue(
-            result.is_symlink
-        )
+        self.assertTrue(result.is_symlink)
 
-        self.assertIsNone(
-            result.content
-        )
+        self.assertIsNone(result.content)
 
     def test_external_file_symlink_is_classified_as_escape(
         self,
@@ -203,10 +170,7 @@ class SafeFileReaderTests(
             / "outside-link.txt"
         )
 
-        self.create_symlink_or_skip(
-            target=target,
-            link=link,
-        )
+        self.create_symlink_or_skip(target=target, link=link)
 
         result = read_scanned_file(
             project_path=self.project,
@@ -215,17 +179,9 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            (
-                FileReadStatus
-                .ESCAPED_SYMLINK
-            ),
-        )
+        self.assertEqual(result.status, FileReadStatus.ESCAPED_SYMLINK)
 
-        self.assertIsNone(
-            result.content
-        )
+        self.assertIsNone(result.content)
 
     def test_missing_file_is_unreadable(
         self,
@@ -237,19 +193,14 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.UNREADABLE,
-        )
+        self.assertEqual(result.status, FileReadStatus.UNREADABLE)
 
         self.assertEqual(
             result.error_type,
             "FileNotFoundError",
         )
 
-        self.assertIsNotNone(
-            result.error_message
-        )
+        self.assertIsNotNone(result.error_message)
 
     def test_absolute_path_outside_project_is_rejected(
         self,
@@ -273,17 +224,9 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            (
-                FileReadStatus
-                .OUTSIDE_PROJECT
-            ),
-        )
+        self.assertEqual(result.status, FileReadStatus.OUTSIDE_PROJECT)
 
-        self.assertIsNone(
-            result.content
-        )
+        self.assertIsNone(result.content)
 
     def test_relative_path_mismatch_is_rejected(
         self,
@@ -307,14 +250,9 @@ class SafeFileReaderTests(
             ),
         )
 
-        self.assertEqual(
-            result.status,
-            FileReadStatus.PATH_MISMATCH,
-        )
+        self.assertEqual(result.status, FileReadStatus.PATH_MISMATCH)
 
-        self.assertIsNone(
-            result.content
-        )
+        self.assertIsNone(result.content)
 
     def test_manifest_reader_preserves_manifest_order(
         self,
@@ -354,15 +292,10 @@ class SafeFileReaderTests(
             ),
         )
 
-        results = read_manifest_files(
-            manifest
-        )
+        results = read_manifest_files(manifest)
 
         self.assertEqual(
-            tuple(
-                result.scanned_file.relative_path
-                for result in results
-            ),
+            tuple(result.scanned_file.relative_path for result in results),
             (
                 "second.txt",
                 "first.txt",

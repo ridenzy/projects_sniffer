@@ -17,9 +17,7 @@ class ProjectSnifferCliTests(
     def test_help_documents_current_analyzers_and_safety_boundary(
         self,
     ) -> None:
-        help_text = (
-            build_parser().format_help()
-        )
+        help_text = build_parser().format_help()
 
         required_fragments = (
             "--project",
@@ -41,13 +39,8 @@ class ProjectSnifferCliTests(
         )
 
         for fragment in required_fragments:
-            with self.subTest(
-                fragment=fragment
-            ):
-                self.assertIn(
-                    fragment,
-                    help_text,
-                )
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, help_text)
 
         self.assertNotIn(
             "Implemented analyzers currently available:",
@@ -65,9 +58,7 @@ class ProjectSnifferCliTests(
         output = io.StringIO()
 
         with redirect_stdout(output):
-            with self.assertRaises(
-                SystemExit
-            ) as raised:
+            with self.assertRaises(SystemExit) as raised:
                 main(
                     ["--help"]
                 )
@@ -88,9 +79,7 @@ class ProjectSnifferCliTests(
         output = io.StringIO()
 
         with redirect_stdout(output):
-            with self.assertRaises(
-                SystemExit
-            ) as raised:
+            with self.assertRaises(SystemExit) as raised:
                 main(
                     ["--version"]
                 )

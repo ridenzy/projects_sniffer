@@ -19,13 +19,9 @@ class DocsReporterTests(
     def setUp(
         self,
     ) -> None:
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.project = (
             self.workspace
@@ -60,13 +56,9 @@ class DocsReporterTests(
             / "private"
         )
 
-        public_docs.mkdir(
-            parents=True
-        )
+        public_docs.mkdir(parents=True)
 
-        private_docs.mkdir(
-            parents=True
-        )
+        private_docs.mkdir(parents=True)
 
         (
             public_docs
@@ -121,13 +113,9 @@ class DocsReporterTests(
             / "fixture-project-private-docs-report.md"
         )
 
-        self.assertTrue(
-            public_report.is_file()
-        )
+        self.assertTrue(public_report.is_file())
 
-        self.assertTrue(
-            private_report.is_file()
-        )
+        self.assertTrue(private_report.is_file())
 
         public_text = public_report.read_text(
             encoding="utf-8"
@@ -181,9 +169,7 @@ class DocsReporterTests(
             / "archive"
         )
 
-        archive.mkdir(
-            parents=True
-        )
+        archive.mkdir(parents=True)
 
         (
             private_docs
@@ -216,9 +202,7 @@ class DocsReporterTests(
             )
         )
 
-        self.assertFalse(
-            summary.private.ignored_by_config
-        )
+        self.assertFalse(summary.private.ignored_by_config)
 
         report = (
             self.output
@@ -246,9 +230,7 @@ class DocsReporterTests(
             / "private"
         )
 
-        private_docs.mkdir(
-            parents=True
-        )
+        private_docs.mkdir(parents=True)
 
         (
             private_docs
@@ -259,9 +241,7 @@ class DocsReporterTests(
             newline="\n",
         )
 
-        self.output.mkdir(
-            parents=True
-        )
+        self.output.mkdir(parents=True)
 
         stale_report = (
             self.output
@@ -274,9 +254,7 @@ class DocsReporterTests(
             newline="\n",
         )
 
-        self.assertTrue(
-            stale_report.is_file()
-        )
+        self.assertTrue(stale_report.is_file())
 
         summary = (
             build_documentation_reports(
@@ -291,25 +269,15 @@ class DocsReporterTests(
             )
         )
 
-        self.assertTrue(
-            summary.private.exists
-        )
+        self.assertTrue(summary.private.exists)
 
-        self.assertTrue(
-            summary.private.ignored_by_config
-        )
+        self.assertTrue(summary.private.ignored_by_config)
 
-        self.assertFalse(
-            summary.private.ignore_overridden
-        )
+        self.assertFalse(summary.private.ignore_overridden)
 
-        self.assertIsNone(
-            summary.private.report_summary
-        )
+        self.assertIsNone(summary.private.report_summary)
 
-        self.assertFalse(
-            stale_report.exists()
-        )
+        self.assertFalse(stale_report.exists())
 
     def test_private_scope_override_preserves_other_ignore_rules(
         self,
@@ -325,9 +293,7 @@ class DocsReporterTests(
             / "archive"
         )
 
-        archive.mkdir(
-            parents=True
-        )
+        archive.mkdir(parents=True)
 
         (
             private_docs
@@ -375,13 +341,9 @@ class DocsReporterTests(
             )
         )
 
-        self.assertTrue(
-            summary.private.ignored_by_config
-        )
+        self.assertTrue(summary.private.ignored_by_config)
 
-        self.assertTrue(
-            summary.private.ignore_overridden
-        )
+        self.assertTrue(summary.private.ignore_overridden)
 
         report = (
             self.output
@@ -424,22 +386,14 @@ class DocsReporterTests(
             0,
         )
 
-        self.assertFalse(
-            summary.public.exists
-        )
+        self.assertFalse(summary.public.exists)
 
-        self.assertFalse(
-            summary.private.exists
-        )
+        self.assertFalse(summary.private.exists)
 
         output = io.StringIO()
 
-        with redirect_stdout(
-            output
-        ):
-            print_documentation_summary(
-                summary
-            )
+        with redirect_stdout(output):
+            print_documentation_summary(summary)
 
         rendered = output.getvalue()
 
@@ -479,22 +433,14 @@ class DocsReporterTests(
         )
 
         try:
-            docs_link.symlink_to(
-                external,
-                target_is_directory=True,
-            )
-        except (
-            OSError,
-            NotImplementedError,
-        ) as error:
+            docs_link.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError) as error:
             self.skipTest(
                 "symlink creation is unavailable: "
                 f"{type(error).__name__}"
             )
 
-        with self.assertRaises(
-            DocsReportError
-        ):
+        with self.assertRaises(DocsReportError):
             build_documentation_reports(
                 project_path=self.project,
                 output_directory=self.output,
@@ -513,9 +459,7 @@ class DocsReporterTests(
             / "public"
         )
 
-        public_docs.mkdir(
-            parents=True
-        )
+        public_docs.mkdir(parents=True)
 
         (
             public_docs
@@ -526,9 +470,7 @@ class DocsReporterTests(
             newline="\n",
         )
 
-        self.output.mkdir(
-            parents=True
-        )
+        self.output.mkdir(parents=True)
 
         outside = (
             self.workspace
@@ -547,21 +489,14 @@ class DocsReporterTests(
         )
 
         try:
-            report_link.symlink_to(
-                outside
-            )
-        except (
-            OSError,
-            NotImplementedError,
-        ) as error:
+            report_link.symlink_to(outside)
+        except (OSError, NotImplementedError) as error:
             self.skipTest(
                 "symlink creation is unavailable: "
                 f"{type(error).__name__}"
             )
 
-        with self.assertRaises(
-            DocsReportError
-        ):
+        with self.assertRaises(DocsReportError):
             build_documentation_reports(
                 project_path=self.project,
                 output_directory=self.output,

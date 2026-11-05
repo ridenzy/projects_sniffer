@@ -60,31 +60,17 @@ class PythonCallResolutionTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=result,
-            language=SourceLanguage.PYTHON,
-        )
+        return SourceEvidence(read_result=result, language=SourceLanguage.PYTHON)
 
     def resolve(
         self,
         *evidence: SourceEvidence,
     ):
-        index = (
-            build_semantic_project_index(
-                evidence
-            )
-        )
+        index = build_semantic_project_index(evidence)
 
-        import_resolutions = (
-            resolve_python_imports(
-                index
-            )
-        )
+        import_resolutions = resolve_python_imports(index)
 
-        return resolve_python_calls(
-            index,
-            import_resolutions,
-        )
+        return resolve_python_calls(index, import_resolutions)
 
     def test_stable_same_file_top_level_bindings_are_resolved_internal(
         self,
@@ -125,14 +111,8 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            target_name,
-            source,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
+        for (case_name, target_name, source) in cases:
+            with self.subTest(case=case_name):
                 resolution = self.resolve(
                     self.evidence(
                         "pkg/app.py",
@@ -140,49 +120,23 @@ class PythonCallResolutionTests(
                     ),
                 )[0]
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .RESOLVED_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-                self.assertIsNotNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNotNone(resolution.resolved_target)
 
                 self.assertEqual(
                     (
-                        resolution
-                        .resolved_target
-                        .source_path
+                        resolution.resolved_target.source_path
                     ),
                     "pkg/app.py",
                 )
 
-                self.assertEqual(
-                    (
-                        resolution
-                        .resolved_target
-                        .qualified_name
-                    ),
-                    target_name,
-                )
+                self.assertEqual(resolution.resolved_target.qualified_name, target_name)
 
-                self.assertIs(
-                    resolution.proof,
-                    (
-                        CallResolutionProof
-                        .SAME_FILE_STABLE_BINDING
-                    ),
-                )
+                self.assertIs(resolution.proof, CallResolutionProof.SAME_FILE_STABLE_BINDING)
 
                 self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
@@ -303,9 +257,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, source in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 resolution = self.resolve(
                     self.evidence(
                         "pkg/app.py",
@@ -313,27 +265,14 @@ class PythonCallResolutionTests(
                     ),
                 )[0]
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .POTENTIAL_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.POTENTIAL_INTERNAL)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
                 self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
@@ -360,9 +299,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, body in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 resolutions = self.resolve(
                     self.evidence(
                         "pkg/app.py",
@@ -382,9 +319,7 @@ class PythonCallResolutionTests(
                 )
 
                 self.assertEqual(
-                    len(
-                        resolutions
-                    ),
+                    len(resolutions),
                     1,
                 )
 
@@ -392,34 +327,20 @@ class PythonCallResolutionTests(
                     resolutions[0]
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .POTENTIAL_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.POTENTIAL_INTERNAL)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
                 self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
                 self.assertEqual(
                     (
-                        resolution
-                        .candidate_targets[0]
+                        resolution.candidate_targets[0]
                         .source_path
                     ),
                     "pkg/worker.py",
@@ -449,47 +370,28 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            ),
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-        self.assertIsNotNone(
-            resolution.resolved_target
-        )
+        self.assertIsNotNone(resolution.resolved_target)
 
         self.assertEqual(
             (
-                resolution
-                .resolved_target
-                .source_path
+                resolution.resolved_target.source_path
             ),
             "pkg/worker.py",
         )
 
         self.assertEqual(
             (
-                resolution
-                .resolved_target
-                .qualified_name
+                resolution.resolved_target.qualified_name
             ),
             "Worker",
         )
 
-        self.assertIs(
-            resolution.proof,
-            (
-                CallResolutionProof
-                .INTERNAL_IMPORT_BINDING
-            ),
-        )
+        self.assertIs(resolution.proof, CallResolutionProof.INTERNAL_IMPORT_BINDING)
 
         target = (
-            resolution
-            .candidate_targets[0]
+            resolution.candidate_targets[0]
         )
 
         self.assertEqual(
@@ -527,21 +429,9 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            ),
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-        self.assertIs(
-            resolution.proof,
-            (
-                CallResolutionProof
-                .INTERNAL_IMPORT_BINDING
-            ),
-        )
+        self.assertIs(resolution.proof, CallResolutionProof.INTERNAL_IMPORT_BINDING)
 
         """
         self.assertIs(
@@ -555,8 +445,7 @@ class PythonCallResolutionTests(
 
         self.assertEqual(
             (
-                resolution
-                .candidate_targets[0]
+                resolution.candidate_targets[0]
                 .qualified_name
             ),
             "Worker",
@@ -589,15 +478,10 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.AMBIGUOUS,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.AMBIGUOUS)
 
         self.assertEqual(
-            len(
-                resolution.candidate_targets
-            ),
+            len(resolution.candidate_targets),
             2,
         )
 
@@ -624,49 +508,28 @@ class PythonCallResolutionTests(
             ),
         )[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            ),
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-        self.assertIsNotNone(
-            resolution.resolved_target
-        )
+        self.assertIsNotNone(resolution.resolved_target)
 
         self.assertEqual(
             (
-                resolution
-                .resolved_target
-                .source_path
+                resolution.resolved_target.source_path
             ),
             "pkg/worker.py",
         )
 
         self.assertEqual(
             (
-                resolution
-                .resolved_target
-                .qualified_name
+                resolution.resolved_target.qualified_name
             ),
             "module_execute",
         )
 
-        self.assertIs(
-            resolution.proof,
-            (
-                CallResolutionProof
-                .INTERNAL_MODULE_ATTRIBUTE_BINDING
-            ),
-        )
+        self.assertIs(resolution.proof, CallResolutionProof.INTERNAL_MODULE_ATTRIBUTE_BINDING)
 
         self.assertEqual(
-            len(
-                resolution
-                .candidate_targets
-            ),
+            len(resolution.candidate_targets),
             1,
         )
 
@@ -803,52 +666,29 @@ class PythonCallResolutionTests(
         )
 
         for case_name, evidence in cases:
-            with self.subTest(
-                case=case_name
-            ):
-                resolutions = self.resolve(
-                    *evidence
-                )
+            with self.subTest(case=case_name):
+                resolutions = self.resolve(*evidence)
 
                 resolution = next(
                     item
                     for item in resolutions
                     if (
-                        len(
-                            item
-                            .evidence
-                            .target_parts
-                        ) == 2
+                        len(item.evidence.target_parts) == 2
                         and (
-                            item
-                            .evidence
-                            .target_parts[-1]
+                            item.evidence.target_parts[-1]
                             == "module_execute"
                         )
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .POTENTIAL_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.POTENTIAL_INTERNAL)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
                 self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
@@ -879,9 +719,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, source in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 resolution = self.resolve(
                     self.evidence(
                         "pkg/app.py",
@@ -896,18 +734,9 @@ class PythonCallResolutionTests(
                     ),
                 )[0]
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .UNRESOLVED
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.UNRESOLVED)
 
-                self.assertEqual(
-                    resolution.candidate_targets,
-                    (),
-                )
+                self.assertEqual(resolution.candidate_targets, ())
 
 
     def test_stable_class_attribute_bindings_are_resolved_internal(
@@ -919,8 +748,7 @@ class PythonCallResolutionTests(
                 "pkg/app.py",
                 "Worker.execute",
                 (
-                    CallResolutionProof
-                    .SAME_FILE_CLASS_ATTRIBUTE_BINDING
+                    CallResolutionProof.SAME_FILE_CLASS_ATTRIBUTE_BINDING
                 ),
                 (
                     self.evidence(
@@ -942,8 +770,7 @@ class PythonCallResolutionTests(
                 "pkg/app.py",
                 "Worker.execute",
                 (
-                    CallResolutionProof
-                    .SAME_FILE_CLASS_ATTRIBUTE_BINDING
+                    CallResolutionProof.SAME_FILE_CLASS_ATTRIBUTE_BINDING
                 ),
                 (
                     self.evidence(
@@ -965,8 +792,7 @@ class PythonCallResolutionTests(
                 "pkg/worker.py",
                 "Worker.execute",
                 (
-                    CallResolutionProof
-                    .INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING
+                    CallResolutionProof.INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING
                 ),
                 (
                     self.evidence(
@@ -995,8 +821,7 @@ class PythonCallResolutionTests(
                 "pkg/worker.py",
                 "Worker.execute",
                 (
-                    CallResolutionProof
-                    .INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING
+                    CallResolutionProof.INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING
                 ),
                 (
                     self.evidence(
@@ -1022,60 +847,22 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            target_path,
-            target_name,
-            expected_proof,
-            evidence,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
-                resolution = self.resolve(
-                    *evidence
-                )[0]
+        for (case_name, target_path, target_name, expected_proof, evidence) in cases:
+            with self.subTest(case=case_name):
+                resolution = self.resolve(*evidence)[0]
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .RESOLVED_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-                self.assertIsNotNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNotNone(resolution.resolved_target)
+
+                self.assertEqual(resolution.resolved_target.source_path, target_path)
+
+                self.assertEqual(resolution.resolved_target.qualified_name, target_name)
+
+                self.assertIs(resolution.proof, expected_proof)
 
                 self.assertEqual(
-                    (
-                        resolution
-                        .resolved_target
-                        .source_path
-                    ),
-                    target_path,
-                )
-
-                self.assertEqual(
-                    (
-                        resolution
-                        .resolved_target
-                        .qualified_name
-                    ),
-                    target_name,
-                )
-
-                self.assertIs(
-                    resolution.proof,
-                    expected_proof,
-                )
-
-                self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
@@ -1290,52 +1077,29 @@ class PythonCallResolutionTests(
         )
 
         for case_name, evidence in cases:
-            with self.subTest(
-                case=case_name
-            ):
-                resolutions = self.resolve(
-                    *evidence
-                )
+            with self.subTest(case=case_name):
+                resolutions = self.resolve(*evidence)
 
                 resolution = next(
                     item
                     for item in resolutions
                     if (
-                        len(
-                            item
-                            .evidence
-                            .target_parts
-                        ) == 2
+                        len(item.evidence.target_parts) == 2
                         and (
-                            item
-                            .evidence
-                            .target_parts[-1]
+                            item.evidence.target_parts[-1]
                             == "execute"
                         )
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .POTENTIAL_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.POTENTIAL_INTERNAL)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
                 self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
@@ -1358,20 +1122,11 @@ class PythonCallResolutionTests(
             ),
         )[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.SHADOWED,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.SHADOWED)
 
-        self.assertIs(
-            resolution.shadowed_by,
-            CallShadowReason.PARAMETER,
-        )
+        self.assertIs(resolution.shadowed_by, CallShadowReason.PARAMETER)
 
-        self.assertEqual(
-            resolution.candidate_targets,
-            (),
-        )
+        self.assertEqual(resolution.candidate_targets, ())
 
 
     def test_local_constructor_instance_calls_are_resolved_internal(
@@ -1446,17 +1201,9 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            evidence,
-            expected_path,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
-                resolutions = self.resolve(
-                    *evidence
-                )
+        for (case_name, evidence, expected_path) in cases:
+            with self.subTest(case=case_name):
+                resolutions = self.resolve(*evidence)
 
                 resolution = next(
                     item
@@ -1470,22 +1217,11 @@ class PythonCallResolutionTests(
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .RESOLVED_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-                self.assertIsNotNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNotNone(resolution.resolved_target)
 
-                self.assertEqual(
-                    resolution.resolved_target.source_path,
-                    expected_path,
-                )
+                self.assertEqual(resolution.resolved_target.source_path, expected_path)
 
                 self.assertEqual(
                     resolution.resolved_target.qualified_name,
@@ -1495,17 +1231,11 @@ class PythonCallResolutionTests(
                 self.assertIs(
                     resolution.proof,
                     (
-                        CallResolutionProof
-                        .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                        CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
                     ),
                 )
 
-                self.assertEqual(
-                    resolution.candidate_targets,
-                    (
-                        resolution.resolved_target,
-                    ),
-                )
+                self.assertEqual(resolution.candidate_targets, (resolution.resolved_target,))
 
 
     def test_local_constructor_instance_calls_are_resolved_inside_direct_class_methods(
@@ -1583,17 +1313,9 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            evidence,
-            expected_path,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
-                resolutions = self.resolve(
-                    *evidence
-                )
+        for (case_name, evidence, expected_path) in cases:
+            with self.subTest(case=case_name):
+                resolutions = self.resolve(*evidence)
 
                 resolution = next(
                     item
@@ -1607,27 +1329,16 @@ class PythonCallResolutionTests(
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .RESOLVED_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
                 self.assertEqual(
                     resolution.evidence.scope,
                     "Manager.run",
                 )
 
-                self.assertIsNotNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNotNone(resolution.resolved_target)
 
-                self.assertEqual(
-                    resolution.resolved_target.source_path,
-                    expected_path,
-                )
+                self.assertEqual(resolution.resolved_target.source_path, expected_path)
 
                 self.assertEqual(
                     resolution.resolved_target.qualified_name,
@@ -1637,8 +1348,7 @@ class PythonCallResolutionTests(
                 self.assertIs(
                     resolution.proof,
                     (
-                        CallResolutionProof
-                        .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                        CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
                     ),
                 )
 
@@ -1685,15 +1395,8 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            source,
-            target_parts,
-            expected_scope,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
+        for (case_name, source, target_parts, expected_scope) in cases:
+            with self.subTest(case=case_name):
                 resolution = next(
                     item
                     for item in self.resolve(
@@ -1703,28 +1406,17 @@ class PythonCallResolutionTests(
                         ),
                     )
                     if (
-                        item.evidence.target_parts
-                        == target_parts
+                        item.evidence.target_parts == target_parts
                     )
                 )
 
-                self.assertEqual(
-                    resolution.evidence.scope,
-                    expected_scope,
-                )
+                self.assertEqual(resolution.evidence.scope, expected_scope)
 
-                self.assertIs(
-                    resolution.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.UNRESOLVED)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
 
     def test_local_constructor_instance_calls_survive_passive_intervening_statements(
@@ -1766,14 +1458,8 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            source,
-            expected_scope,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
+        for (case_name, source, expected_scope) in cases:
+            with self.subTest(case=case_name):
                 resolution = next(
                     item
                     for item in self.resolve(
@@ -1791,22 +1477,11 @@ class PythonCallResolutionTests(
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .RESOLVED_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-                self.assertEqual(
-                    resolution.evidence.scope,
-                    expected_scope,
-                )
+                self.assertEqual(resolution.evidence.scope, expected_scope)
 
-                self.assertIsNotNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNotNone(resolution.resolved_target)
 
                 self.assertEqual(
                     resolution.resolved_target.qualified_name,
@@ -1816,8 +1491,7 @@ class PythonCallResolutionTests(
                 self.assertIs(
                     resolution.proof,
                     (
-                        CallResolutionProof
-                        .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                        CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
                     ),
                 )
 
@@ -1895,9 +1569,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, source in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 resolution = next(
                     item
                     for item in self.resolve(
@@ -1915,18 +1587,11 @@ class PythonCallResolutionTests(
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.UNRESOLVED)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
     def test_unsafe_local_instance_shapes_remain_unresolved(
         self,
@@ -2017,9 +1682,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, source in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 resolutions = self.resolve(
                     self.evidence(
                         "pkg/app.py",
@@ -2039,23 +1702,13 @@ class PythonCallResolutionTests(
                     )
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.UNRESOLVED)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
-                self.assertEqual(
-                    resolution.candidate_targets,
-                    (),
-                )
+                self.assertEqual(resolution.candidate_targets, ())
 
 
     def test_attribute_call_remains_unresolved(
@@ -2124,24 +1777,13 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.DYNAMIC,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.DYNAMIC)
 
-        self.assertIs(
-            resolution.dynamic_kind,
-            DynamicCallKind.CALLBACK_PARAMETER,
-        )
+        self.assertIs(resolution.dynamic_kind, DynamicCallKind.CALLBACK_PARAMETER)
 
-        self.assertIsNone(
-            resolution.shadowed_by
-        )
+        self.assertIsNone(resolution.shadowed_by)
 
-        self.assertEqual(
-            resolution.candidate_targets,
-            (),
-        )
+        self.assertEqual(resolution.candidate_targets, ())
 
 
     def test_getattr_result_dynamic_kind_is_preserved(
@@ -2209,20 +1851,11 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.SHADOWED,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.SHADOWED)
 
-        self.assertIs(
-            resolution.shadowed_by,
-            CallShadowReason.PARAMETER,
-        )
+        self.assertIs(resolution.shadowed_by, CallShadowReason.PARAMETER)
 
-        self.assertEqual(
-            resolution.candidate_targets,
-            (),
-        )
+        self.assertEqual(resolution.candidate_targets, ())
 
     def test_assignment_shadows_imported_candidate(
         self,
@@ -2249,20 +1882,11 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.SHADOWED,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.SHADOWED)
 
-        self.assertIs(
-            resolution.shadowed_by,
-            CallShadowReason.ASSIGNMENT,
-        )
+        self.assertIs(resolution.shadowed_by, CallShadowReason.ASSIGNMENT)
 
-        self.assertEqual(
-            resolution.candidate_targets,
-            (),
-        )
+        self.assertEqual(resolution.candidate_targets, ())
 
     def test_local_import_shadows_top_level_candidate(
         self,
@@ -2283,15 +1907,9 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.SHADOWED,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.SHADOWED)
 
-        self.assertIs(
-            resolution.shadowed_by,
-            CallShadowReason.IMPORT,
-        )
+        self.assertIs(resolution.shadowed_by, CallShadowReason.IMPORT)
 
     def test_free_closure_binding_shadows_module_candidate(
         self,
@@ -2314,15 +1932,9 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.SHADOWED,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.SHADOWED)
 
-        self.assertIs(
-            resolution.shadowed_by,
-            CallShadowReason.FREE,
-        )
+        self.assertIs(resolution.shadowed_by, CallShadowReason.FREE)
 
     def test_nonlocal_binding_shadows_module_candidate(
         self,
@@ -2346,15 +1958,9 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            CallResolutionStatus.SHADOWED,
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.SHADOWED)
 
-        self.assertIs(
-            resolution.shadowed_by,
-            CallShadowReason.NONLOCAL,
-        )
+        self.assertIs(resolution.shadowed_by, CallShadowReason.NONLOCAL)
 
     def test_global_declaration_preserves_stable_module_binding(
         self,
@@ -2375,29 +1981,13 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            ),
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-        self.assertIsNone(
-            resolution.shadowed_by
-        )
+        self.assertIsNone(resolution.shadowed_by)
 
-        self.assertIsNotNone(
-            resolution.resolved_target
-        )
+        self.assertIsNotNone(resolution.resolved_target)
 
-        self.assertIs(
-            resolution.proof,
-            (
-                CallResolutionProof
-                .SAME_FILE_STABLE_BINDING
-            ),
-        )
+        self.assertIs(resolution.proof, CallResolutionProof.SAME_FILE_STABLE_BINDING)
 
     def test_local_internal_import_is_resolved_internal(
         self,
@@ -2422,34 +2012,18 @@ class PythonCallResolutionTests(
 
         resolution = resolutions[0]
 
-        self.assertIs(
-            resolution.status,
-            (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            ),
-        )
+        self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-        self.assertIsNotNone(
-            resolution.resolved_target
-        )
+        self.assertIsNotNone(resolution.resolved_target)
 
         self.assertEqual(
             (
-                resolution
-                .resolved_target
-                .source_path
+                resolution.resolved_target.source_path
             ),
             "pkg/worker.py",
         )
 
-        self.assertIs(
-            resolution.proof,
-            (
-                CallResolutionProof
-                .INTERNAL_IMPORT_BINDING
-            ),
-        )
+        self.assertIs(resolution.proof, CallResolutionProof.INTERNAL_IMPORT_BINDING)
 
 
     def test_unstable_internal_import_bindings_remain_potential(
@@ -2504,9 +2078,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, source in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 resolutions = self.resolve(
                     self.evidence(
                         "pkg/app.py",
@@ -2522,9 +2094,7 @@ class PythonCallResolutionTests(
                 )
 
                 self.assertEqual(
-                    len(
-                        resolutions
-                    ),
+                    len(resolutions),
                     1,
                 )
 
@@ -2532,27 +2102,14 @@ class PythonCallResolutionTests(
                     resolutions[0]
                 )
 
-                self.assertIs(
-                    resolution.status,
-                    (
-                        CallResolutionStatus
-                        .POTENTIAL_INTERNAL
-                    ),
-                )
+                self.assertIs(resolution.status, CallResolutionStatus.POTENTIAL_INTERNAL)
 
-                self.assertIsNone(
-                    resolution.resolved_target
-                )
+                self.assertIsNone(resolution.resolved_target)
 
-                self.assertIsNone(
-                    resolution.proof
-                )
+                self.assertIsNone(resolution.proof)
 
                 self.assertEqual(
-                    len(
-                        resolution
-                        .candidate_targets
-                    ),
+                    len(resolution.candidate_targets),
                     1,
                 )
 
@@ -2601,18 +2158,10 @@ class PythonCallResolutionTests(
             )
         )
 
-        for resolution in (
-            class_resolution,
-            instance_resolution,
-        ):
-            self.assertIs(
-                resolution.status,
-                CallResolutionStatus.RESOLVED_INTERNAL,
-            )
+        for resolution in (class_resolution, instance_resolution):
+            self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-            self.assertIsNotNone(
-                resolution.resolved_target
-            )
+            self.assertIsNotNone(resolution.resolved_target)
 
             self.assertEqual(
                 resolution.resolved_target.source_path,
@@ -2624,26 +2173,19 @@ class PythonCallResolutionTests(
                 "Base.execute",
             )
 
-            self.assertEqual(
-                resolution.candidate_targets,
-                (
-                    resolution.resolved_target,
-                ),
-            )
+            self.assertEqual(resolution.candidate_targets, (resolution.resolved_target,))
 
         self.assertIs(
             class_resolution.proof,
             (
-                CallResolutionProof
-                .SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING
+                CallResolutionProof.SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING
             ),
         )
 
         self.assertIs(
             instance_resolution.proof,
             (
-                CallResolutionProof
-                .LOCAL_INSTANCE_INHERITED_METHOD_BINDING
+                CallResolutionProof.LOCAL_INSTANCE_INHERITED_METHOD_BINDING
             ),
         )
 
@@ -2981,13 +2523,7 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            app_prefix,
-            base_source,
-            class_expected,
-            instance_expected,
-        ) in cases:
+        for (case_name, app_prefix, base_source, class_expected, instance_expected) in cases:
             with self.subTest(case=case_name):
                 resolutions = self.resolve(
                     self.evidence(
@@ -3017,19 +2553,13 @@ class PythonCallResolutionTests(
                     else "Base.execute"
                 )
 
-                for (
-                    label,
-                    resolution,
-                    expected_resolved,
-                    expected_proof,
-                ) in (
+                for (label, resolution, expected_resolved, expected_proof) in (
                     (
                         "class",
                         class_resolution,
                         class_expected,
                         (
-                            CallResolutionProof
-                            .INTERNAL_IMPORTED_INHERITED_CLASS_ATTRIBUTE_BINDING
+                            CallResolutionProof.INTERNAL_IMPORTED_INHERITED_CLASS_ATTRIBUTE_BINDING
                         ),
                     ),
                     (
@@ -3037,27 +2567,15 @@ class PythonCallResolutionTests(
                         instance_resolution,
                         instance_expected,
                         (
-                            CallResolutionProof
-                            .LOCAL_INSTANCE_INHERITED_METHOD_BINDING
+                            CallResolutionProof.LOCAL_INSTANCE_INHERITED_METHOD_BINDING
                         ),
                     ),
                 ):
-                    with self.subTest(
-                        case=case_name,
-                        receiver=label,
-                    ):
+                    with self.subTest(case=case_name, receiver=label):
                         if expected_resolved:
-                            self.assertIs(
-                                resolution.status,
-                                CallResolutionStatus.RESOLVED_INTERNAL,
-                            )
-                            self.assertIs(
-                                resolution.proof,
-                                expected_proof,
-                            )
-                            self.assertIsNotNone(
-                                resolution.resolved_target
-                            )
+                            self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
+                            self.assertIs(resolution.proof, expected_proof)
+                            self.assertIsNotNone(resolution.resolved_target)
                             self.assertEqual(
                                 resolution.resolved_target.source_path,
                                 "pkg/base.py",
@@ -3068,21 +2586,12 @@ class PythonCallResolutionTests(
                             )
                             self.assertEqual(
                                 resolution.candidate_targets,
-                                (
-                                    resolution.resolved_target,
-                                ),
+                                (resolution.resolved_target,),
                             )
                         else:
-                            self.assertIs(
-                                resolution.status,
-                                CallResolutionStatus.UNRESOLVED,
-                            )
-                            self.assertIsNone(
-                                resolution.proof
-                            )
-                            self.assertIsNone(
-                                resolution.resolved_target
-                            )
+                            self.assertIs(resolution.status, CallResolutionStatus.UNRESOLVED)
+                            self.assertIsNone(resolution.proof)
+                            self.assertIsNone(resolution.resolved_target)
 
 
     def test_inheritance_shape_resolution_and_safety_boundaries(
@@ -3204,9 +2713,7 @@ class PythonCallResolutionTests(
         )
 
         for case_name, prefix in cases:
-            with self.subTest(
-                case=case_name
-            ):
+            with self.subTest(case=case_name):
                 source = (
                     prefix
                     + "\n"
@@ -3260,17 +2767,12 @@ class PythonCallResolutionTests(
                     continue
 
                 if case_name == "deeper_inheritance":
-                    self.assertIs(
-                        class_resolution.status,
-                        CallResolutionStatus.RESOLVED_INTERNAL,
-                    )
+                    self.assertIs(class_resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
                     self.assertIs(
                         class_resolution.proof,
                         CallResolutionProof.SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING,
                     )
-                    self.assertIsNotNone(
-                        class_resolution.resolved_target
-                    )
+                    self.assertIsNotNone(class_resolution.resolved_target)
                     self.assertEqual(
                         class_resolution.resolved_target.source_path,
                         "pkg/app.py",
@@ -3292,9 +2794,7 @@ class PythonCallResolutionTests(
                         instance_resolution.proof,
                         CallResolutionProof.LOCAL_INSTANCE_INHERITED_METHOD_BINDING,
                     )
-                    self.assertIsNotNone(
-                        instance_resolution.resolved_target
-                    )
+                    self.assertIsNotNone(instance_resolution.resolved_target)
                     self.assertEqual(
                         instance_resolution.resolved_target.source_path,
                         "pkg/app.py",
@@ -3309,26 +2809,12 @@ class PythonCallResolutionTests(
                     )
                     continue
 
-                self.assertIs(
-                    class_resolution.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
-                self.assertIs(
-                    instance_resolution.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
-                self.assertIsNone(
-                    class_resolution.proof
-                )
-                self.assertIsNone(
-                    class_resolution.resolved_target
-                )
-                self.assertIsNone(
-                    instance_resolution.proof
-                )
-                self.assertIsNone(
-                    instance_resolution.resolved_target
-                )
+                self.assertIs(class_resolution.status, CallResolutionStatus.UNRESOLVED)
+                self.assertIs(instance_resolution.status, CallResolutionStatus.UNRESOLVED)
+                self.assertIsNone(class_resolution.proof)
+                self.assertIsNone(class_resolution.resolved_target)
+                self.assertIsNone(instance_resolution.proof)
+                self.assertIsNone(instance_resolution.resolved_target)
 
     def test_shallow_two_root_inheritance_order_and_refusal_boundaries(self) -> None:
         cases = (
@@ -3682,17 +3168,11 @@ class PythonCallResolutionTests(
                 )
 
                 if expected_target is None:
-                    self.assertIs(
-                        class_result.status,
-                        CallResolutionStatus.UNRESOLVED,
-                    )
+                    self.assertIs(class_result.status, CallResolutionStatus.UNRESOLVED)
                     self.assertIsNone(class_result.proof)
                     self.assertIsNone(class_result.resolved_target)
                 else:
-                    self.assertIs(
-                        class_result.status,
-                        CallResolutionStatus.RESOLVED_INTERNAL,
-                    )
+                    self.assertIs(class_result.status, CallResolutionStatus.RESOLVED_INTERNAL)
                     self.assertIs(
                         class_result.proof,
                         CallResolutionProof.SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING,
@@ -3702,19 +3182,13 @@ class PythonCallResolutionTests(
                         class_result.resolved_target.source_path,
                         "pkg/app.py",
                     )
-                    self.assertEqual(
-                        class_result.resolved_target.qualified_name,
-                        expected_target,
-                    )
+                    self.assertEqual(class_result.resolved_target.qualified_name, expected_target)
                     self.assertEqual(
                         class_result.candidate_targets,
                         (class_result.resolved_target,),
                     )
 
-                self.assertIs(
-                    instance_result.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
+                self.assertIs(instance_result.status, CallResolutionStatus.UNRESOLVED)
                 self.assertIsNone(instance_result.proof)
                 self.assertIsNone(instance_result.resolved_target)
 
@@ -3857,14 +3331,8 @@ class PythonCallResolutionTests(
             ),
         )
 
-        for (
-            case_name,
-            prefix,
-            expected_class_status,
-        ) in cases:
-            with self.subTest(
-                case=case_name
-            ):
+        for (case_name, prefix, expected_class_status) in cases:
+            with self.subTest(case=case_name):
                 source = (
                     prefix
                     + "\n"
@@ -3903,26 +3371,19 @@ class PythonCallResolutionTests(
                     )
                 )
 
-                self.assertIs(
-                    class_resolution.status,
-                    expected_class_status,
-                )
+                self.assertIs(class_resolution.status, expected_class_status)
 
                 if (
-                    expected_class_status
-                    is CallResolutionStatus.RESOLVED_INTERNAL
+                    expected_class_status is CallResolutionStatus.RESOLVED_INTERNAL
                 ):
                     self.assertIs(
                         class_resolution.proof,
                         (
-                            CallResolutionProof
-                            .SAME_FILE_CLASS_ATTRIBUTE_BINDING
+                            CallResolutionProof.SAME_FILE_CLASS_ATTRIBUTE_BINDING
                         ),
                     )
 
-                    self.assertIsNotNone(
-                        class_resolution.resolved_target
-                    )
+                    self.assertIsNotNone(class_resolution.resolved_target)
 
                     self.assertEqual(
                         class_resolution.resolved_target.qualified_name,
@@ -3930,26 +3391,15 @@ class PythonCallResolutionTests(
                     )
 
                 else:
-                    self.assertIsNone(
-                        class_resolution.proof
-                    )
+                    self.assertIsNone(class_resolution.proof)
 
-                    self.assertIsNone(
-                        class_resolution.resolved_target
-                    )
+                    self.assertIsNone(class_resolution.resolved_target)
 
-                self.assertIs(
-                    instance_resolution.status,
-                    CallResolutionStatus.UNRESOLVED,
-                )
+                self.assertIs(instance_resolution.status, CallResolutionStatus.UNRESOLVED)
 
-                self.assertIsNone(
-                    instance_resolution.proof
-                )
+                self.assertIsNone(instance_resolution.proof)
 
-                self.assertIsNone(
-                    instance_resolution.resolved_target
-                )
+                self.assertIsNone(instance_resolution.resolved_target)
 
     def test_same_file_one_hop_subclass_owned_method_calls_are_resolved_internal(
         self,
@@ -3995,18 +3445,10 @@ class PythonCallResolutionTests(
             )
         )
 
-        for resolution in (
-            class_resolution,
-            instance_resolution,
-        ):
-            self.assertIs(
-                resolution.status,
-                CallResolutionStatus.RESOLVED_INTERNAL,
-            )
+        for resolution in (class_resolution, instance_resolution):
+            self.assertIs(resolution.status, CallResolutionStatus.RESOLVED_INTERNAL)
 
-            self.assertIsNotNone(
-                resolution.resolved_target
-            )
+            self.assertIsNotNone(resolution.resolved_target)
 
             self.assertEqual(
                 resolution.resolved_target.source_path,
@@ -4018,26 +3460,14 @@ class PythonCallResolutionTests(
                 "Worker.execute",
             )
 
-            self.assertEqual(
-                resolution.candidate_targets,
-                (
-                    resolution.resolved_target,
-                ),
-            )
+            self.assertEqual(resolution.candidate_targets, (resolution.resolved_target,))
 
-        self.assertIs(
-            class_resolution.proof,
-            (
-                CallResolutionProof
-                .SAME_FILE_CLASS_ATTRIBUTE_BINDING
-            ),
-        )
+        self.assertIs(class_resolution.proof, CallResolutionProof.SAME_FILE_CLASS_ATTRIBUTE_BINDING)
 
         self.assertIs(
             instance_resolution.proof,
             (
-                CallResolutionProof
-                .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
             ),
         )
 

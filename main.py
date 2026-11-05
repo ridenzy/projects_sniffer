@@ -8,24 +8,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 SOURCE_ROOT = PROJECT_ROOT / "src"
 
 if SOURCE_ROOT.is_dir():
-    source_root_value = str(
-        SOURCE_ROOT
-    )
+    source_root_value = str(SOURCE_ROOT)
 
     if source_root_value not in sys.path:
-        sys.path.insert(
-            0,
-            source_root_value,
-        )
+        sys.path.insert(0, source_root_value)
 
-from project_sniffer.application import (
-    run_analysis,
-)
+from project_sniffer.application import run_analysis
 
 
-def main(
-    argv: list[str] | None = None,
-) -> int:
+def main(argv: list[str] | None = None) -> int:
     """
     Compatibility entry point for the original positional command.
 
@@ -38,16 +29,10 @@ def main(
     report generation, and grouped output to the packaged implementation.
     """
 
-    arguments = list(
-        sys.argv[1:]
-        if argv is None
-        else argv
-    )
+    arguments = list(sys.argv[1:] if argv is None else argv)
 
     if len(arguments) != 1:
-        print(
-            "Usage: python3 main.py <project_path>"
-        )
+        print("Usage: python3 main.py <project_path>")
         return 1
 
     return run_analysis(

@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import ast
 
-from project_sniffer.evidence import (
-    SourceEvidence,
-    SourceLanguage,
-)
+from project_sniffer.evidence import SourceEvidence, SourceLanguage
 from project_sniffer.parsing.models import (
     ImportEvidence,
     ParsedSource,
@@ -22,152 +19,70 @@ PYTHON_AST_PARSER_ID = "python-stdlib-ast"
 
 
 
-def _static_call_target_parts(
-    node: ast.AST,
-) -> tuple[str, ...] | None:
-    if isinstance(
-        node,
-        ast.Name,
-    ):
-        return (
-            node.id,
-        )
+def _static_call_target_parts(node: ast.AST) -> tuple[str, ...] | None:
+    if isinstance(node, ast.Name):
+        return (node.id,)
 
-    if isinstance(
-        node,
-        ast.Attribute,
-    ):
-        parent = (
-            _static_call_target_parts(
-                node.value
-            )
-        )
+    if isinstance(node, ast.Attribute):
+        parent = _static_call_target_parts(node.value)
 
         if parent is None:
             return None
 
-        return (
-            *parent,
-            node.attr,
-        )
+        return (*parent, node.attr)
 
     return None
 
-def _dynamic_call_kind(
-    node: ast.AST,
-) -> DynamicCallKind:
-    if isinstance(
-        node,
-        ast.Subscript,
-    ):
-        return (
-            DynamicCallKind
-            .SUBSCRIPT_SELECTED
-        )
+def _dynamic_call_kind(node: ast.AST) -> DynamicCallKind:
+    if isinstance(node, ast.Subscript):
+        return DynamicCallKind.SUBSCRIPT_SELECTED
 
-    if isinstance(
-        node,
-        ast.Call,
-    ):
-        inner_target = (
-            _static_call_target_parts(
-                node.func
-            )
-        )
+    if isinstance(node, ast.Call):
+        inner_target = _static_call_target_parts(node.func)
 
-        if inner_target == (
-            "getattr",
-        ):
-            return (
-                DynamicCallKind
-                .GETATTR_RESULT
-            )
+        if inner_target == ("getattr",):
+            return DynamicCallKind.GETATTR_RESULT
 
-        return (
-            DynamicCallKind
-            .RETURNED_CALLABLE
-        )
+        return DynamicCallKind.RETURNED_CALLABLE
 
     return DynamicCallKind.OTHER
 
 
-class _PythonEvidenceVisitor(
-    ast.NodeVisitor
-):
-    def __init__(
-        self,
-    ) -> None:
-        self.imports: list[
-            ImportEvidence
-        ] = []
+class _PythonEvidenceVisitor(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.imports: list[ImportEvidence] = []
 
-        self.symbols: list[
-            SymbolEvidence
-        ] = []
+        self.symbols: list[SymbolEvidence] = []
 
-        self.calls: list[
-            CallEvidence
-        ] = []
+        self.calls: list[CallEvidence] = []
 
         self._scope: list[str] = []
 
     @property
-    def scope_name(
-        self,
-    ) -> str | None:
+    def scope_name(self) -> str | None:
         if not self._scope:
             return None
 
-        return ".".join(
-            self._scope
-        )
+        return ".".join(self._scope)
 
-    def qualified_name(
-        self,
-        name: str,
-    ) -> str:
+    def qualified_name(self, name: str) -> str:
         if not self._scope:
             return name
 
-        return ".".join(
-            (
-                *self._scope,
-                name,
-            )
-        )
+        return ".".join((*self._scope, name))
 
-    def record_symbol(
-        self,
-        node: ast.AST,
-        name: str,
-        kind: SymbolKind,
-    ) -> None:
+    def record_symbol(self, node: ast.AST, name: str, kind: SymbolKind) -> None:
         self.symbols.append(
             SymbolEvidence(
                 name=name,
-                qualified_name=(
-                    self.qualified_name(
-                        name
-                    )
-                ),
+                qualified_name=self.qualified_name(name),
                 kind=kind,
-                line=getattr(
-                    node,
-                    "lineno",
-                    0,
-                ),
-                end_line=getattr(
-                    node,
-                    "end_lineno",
-                    None,
-                ),
+                line=getattr(node, "lineno", 0),
+                end_line=getattr(node, "end_lineno", None),
             )
         )
 
-    def visit_Import(
-        self,
-        node: ast.Import,
-    ) -> None:
+    def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             self.imports.append(
                 ImportEvidence(
@@ -180,10 +95,7 @@ class _PythonEvidenceVisitor(
                 )
             )
 
-    def visit_ImportFrom(
-        self,
-        node: ast.ImportFrom,
-    ) -> None:
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         for alias in node.names:
             self.imports.append(
                 ImportEvidence(
@@ -196,39 +108,20 @@ class _PythonEvidenceVisitor(
                 )
             )
 
-    def visit_Call(
-        self,
-        node: ast.Call,
-    ) -> None:
-        target_parts = (
-            _static_call_target_parts(
-                node.func
-            )
-        )
+    def visit_Call(self, node: ast.Call) -> None:
+        target_parts = _static_call_target_parts(node.func)
         dynamic_kind = None
 
         if target_parts is None:
-            target_kind = (
-                CallTargetKind.DYNAMIC
-            )
-            dynamic_kind = (
-                _dynamic_call_kind(
-                    node.func
-                )
-            )
+            target_kind = CallTargetKind.DYNAMIC
+            dynamic_kind = _dynamic_call_kind(node.func)
             target_parts = ()
 
-        elif len(
-            target_parts
-        ) == 1:
-            target_kind = (
-                CallTargetKind.NAME
-            )
+        elif len(target_parts) == 1:
+            target_kind = CallTargetKind.NAME
 
         else:
-            target_kind = (
-                CallTargetKind.ATTRIBUTE
-            )
+            target_kind = CallTargetKind.ATTRIBUTE
 
         self.calls.append(
             CallEvidence(
@@ -240,142 +133,69 @@ class _PythonEvidenceVisitor(
             )
         )
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
-    def visit_ClassDef(
-        self,
-        node: ast.ClassDef,
-    ) -> None:
-        self.record_symbol(
-            node,
-            node.name,
-            SymbolKind.CLASS,
-        )
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.record_symbol(node, node.name, SymbolKind.CLASS)
 
-        self._scope.append(
-            node.name
-        )
+        self._scope.append(node.name)
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
         self._scope.pop()
 
-    def visit_FunctionDef(
-        self,
-        node: ast.FunctionDef,
-    ) -> None:
-        self.record_symbol(
-            node,
-            node.name,
-            SymbolKind.FUNCTION,
-        )
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.record_symbol(node, node.name, SymbolKind.FUNCTION)
 
-        self._scope.append(
-            node.name
-        )
+        self._scope.append(node.name)
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
         self._scope.pop()
 
-    def visit_AsyncFunctionDef(
-        self,
-        node: ast.AsyncFunctionDef,
-    ) -> None:
-        self.record_symbol(
-            node,
-            node.name,
-            SymbolKind.ASYNC_FUNCTION,
-        )
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.record_symbol(node, node.name, SymbolKind.ASYNC_FUNCTION)
 
-        self._scope.append(
-            node.name
-        )
+        self._scope.append(node.name)
 
-        self.generic_visit(
-            node
-        )
+        self.generic_visit(node)
 
         self._scope.pop()
 
 
-def parse_python_source(
-    evidence: SourceEvidence,
-) -> ParsedSource:
-    if (
-        evidence.language
-        is not SourceLanguage.PYTHON
-    ):
-        raise ValueError(
-            "parse_python_source requires "
-            "Python SourceEvidence."
-        )
+def parse_python_source(evidence: SourceEvidence) -> ParsedSource:
+    if evidence.language is not SourceLanguage.PYTHON:
+        raise ValueError("parse_python_source requires Python SourceEvidence.")
 
-    content = (
-        evidence
-        .read_result
-        .content
-    )
+    content = evidence.read_result.content
 
     if content is None:
-        raise ValueError(
-            "parse_python_source requires "
-            "readable source content."
-        )
+        raise ValueError("parse_python_source requires readable source content.")
 
-    relative_path = (
-        evidence
-        .read_result
-        .scanned_file
-        .relative_path
-    )
+    relative_path = evidence.read_result.scanned_file.relative_path
 
     try:
-        tree = ast.parse(
-            content,
-            filename=relative_path,
-            type_comments=True,
-        )
+        tree = ast.parse(content, filename=relative_path, type_comments=True)
 
     except SyntaxError as error:
         return ParsedSource(
             source=evidence,
-            status=(
-                ParseStatus.SYNTAX_ERROR
-            ),
-            parser_id=(
-                PYTHON_AST_PARSER_ID
-            ),
+            status=ParseStatus.SYNTAX_ERROR,
+            parser_id=PYTHON_AST_PARSER_ID,
             error_type="SyntaxError",
             error_message=error.msg,
             error_line=error.lineno,
         )
 
-    visitor = (
-        _PythonEvidenceVisitor()
-    )
+    visitor = _PythonEvidenceVisitor()
 
-    visitor.visit(
-        tree
-    )
+    visitor.visit(tree)
 
     return ParsedSource(
         source=evidence,
         status=ParseStatus.PARSED,
         parser_id=PYTHON_AST_PARSER_ID,
-        imports=tuple(
-            visitor.imports
-        ),
-        symbols=tuple(
-            visitor.symbols
-        ),
-        calls=tuple(
-            visitor.calls
-        ),
+        imports=tuple(visitor.imports),
+        symbols=tuple(visitor.symbols),
+        calls=tuple(visitor.calls),
     )

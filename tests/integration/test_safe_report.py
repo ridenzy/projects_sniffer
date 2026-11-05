@@ -19,13 +19,9 @@ class SafeReportIntegrationTests(
     ) -> None:
         self.original_cwd = Path.cwd()
 
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.personal_registry_path = (
             self.workspace
@@ -43,9 +39,7 @@ class SafeReportIntegrationTests(
 
         self.personal_registry_patcher.start()
 
-        os.chdir(
-            self.workspace
-        )
+        os.chdir(self.workspace)
 
         self.project = (
             self.workspace
@@ -74,9 +68,7 @@ class SafeReportIntegrationTests(
     ) -> None:
         self.personal_registry_patcher.stop()
 
-        os.chdir(
-            self.original_cwd
-        )
+        os.chdir(self.original_cwd)
 
         self.temporary_directory.cleanup()
 
@@ -87,13 +79,8 @@ class SafeReportIntegrationTests(
         link: Path,
     ) -> None:
         try:
-            link.symlink_to(
-                target
-            )
-        except (
-            OSError,
-            NotImplementedError,
-        ) as error:
+            link.symlink_to(target)
+        except (OSError, NotImplementedError) as error:
             self.skipTest(
                 "symlink creation is unavailable: "
                 f"{type(error).__name__}"
@@ -136,27 +123,17 @@ class SafeReportIntegrationTests(
             / "escaped-link.txt"
         )
 
-        self.create_symlink_or_skip(
-            target=internal_target,
-            link=internal_link,
-        )
+        self.create_symlink_or_skip(target=internal_target, link=internal_link)
 
-        self.create_symlink_or_skip(
-            target=outside_target,
-            link=escaped_link,
-        )
+        self.create_symlink_or_skip(target=outside_target, link=escaped_link)
 
         stdout = io.StringIO()
 
-        with redirect_stdout(
-            stdout
-        ):
+        with redirect_stdout(stdout):
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--report",
                 ]
             )
@@ -173,9 +150,7 @@ class SafeReportIntegrationTests(
             / "fixture-project-project-report.md"
         )
 
-        self.assertTrue(
-            report_path.is_file()
-        )
+        self.assertTrue(report_path.is_file())
 
         report = report_path.read_text(
             encoding="utf-8"

@@ -8,10 +8,7 @@ from project_sniffer.evidence.language_registry import (
     classify_path_language,
     get_language_definition,
 )
-from project_sniffer.evidence.models import (
-    SourceEvidence,
-    SourceLanguage,
-)
+from project_sniffer.evidence.models import SourceEvidence, SourceLanguage
 
 
 __all__ = [

@@ -57,24 +57,15 @@ class DependencyGraphTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=result,
-            language=SourceLanguage.PYTHON,
-        )
+        return SourceEvidence(read_result=result, language=SourceLanguage.PYTHON)
 
     def graph(
         self,
         *evidence: SourceEvidence,
     ):
-        index = (
-            build_semantic_project_index(
-                evidence
-            )
-        )
+        index = build_semantic_project_index(evidence)
 
-        return build_dependency_graph(
-            index
-        )
+        return build_dependency_graph(index)
 
     def test_resolved_import_and_call_become_dependency_edges(
         self,
@@ -103,41 +94,31 @@ class DependencyGraphTests(
         )
 
         self.assertEqual(
-            len(
-                graph.import_resolutions
-            ),
+            len(graph.import_resolutions),
             1,
         )
 
         self.assertEqual(
-            len(
-                graph.call_resolutions
-            ),
+            len(graph.call_resolutions),
             1,
         )
 
         self.assertIs(
             graph.call_resolutions[0].status,
             (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
+                CallResolutionStatus.RESOLVED_INTERNAL
             ),
         )
 
         self.assertEqual(
-            len(
-                graph.edges
-            ),
+            len(graph.edges),
             2,
         )
 
         import_edge = graph.edges[0]
         call_edge = graph.edges[1]
 
-        self.assertIs(
-            call_edge.kind,
-            DependencyKind.CALL,
-        )
+        self.assertIs(call_edge.kind, DependencyKind.CALL)
 
         self.assertEqual(
             call_edge.source_path,
@@ -192,17 +173,10 @@ class DependencyGraphTests(
             ),
         )
 
-        call_edges = tuple(
-            edge
-            for edge in graph.edges
-            if edge.kind
-            is DependencyKind.CALL
-        )
+        call_edges = tuple(edge for edge in graph.edges if edge.kind is DependencyKind.CALL)
 
         self.assertEqual(
-            len(
-                call_edges
-            ),
+            len(call_edges),
             1,
         )
 
@@ -252,17 +226,10 @@ class DependencyGraphTests(
             ),
         )
 
-        call_edges = tuple(
-            edge
-            for edge in graph.edges
-            if edge.kind
-            is DependencyKind.CALL
-        )
+        call_edges = tuple(edge for edge in graph.edges if edge.kind is DependencyKind.CALL)
 
         self.assertEqual(
-            len(
-                call_edges
-            ),
+            len(call_edges),
             1,
         )
 
@@ -316,8 +283,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.target_symbol
                 == "Worker.execute"
             )
@@ -374,8 +340,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.target_symbol
                 == "Worker.execute"
             )
@@ -435,8 +400,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.target_symbol
                 == "Worker.execute"
             )
@@ -478,24 +442,11 @@ class DependencyGraphTests(
         )
 
         self.assertEqual(
-            tuple(
-                resolution.status
-                for resolution
-                in graph.import_resolutions
-            ),
-            (
-                ImportResolutionStatus.UNRESOLVED,
-                (
-                    ImportResolutionStatus
-                    .INVALID_RELATIVE_IMPORT
-                ),
-            ),
+            tuple(resolution.status for resolution in graph.import_resolutions),
+            (ImportResolutionStatus.UNRESOLVED, ImportResolutionStatus.INVALID_RELATIVE_IMPORT),
         )
 
-        self.assertEqual(
-            graph.edges,
-            (),
-        )
+        self.assertEqual(graph.edges, ())
 
     def test_stable_same_file_call_becomes_dependency_edge(
         self,
@@ -514,33 +465,25 @@ class DependencyGraphTests(
         )
 
         self.assertEqual(
-            len(
-                graph.call_resolutions
-            ),
+            len(graph.call_resolutions),
             1,
         )
 
         self.assertIs(
             graph.call_resolutions[0].status,
             (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
+                CallResolutionStatus.RESOLVED_INTERNAL
             ),
         )
 
         self.assertEqual(
-            len(
-                graph.edges
-            ),
+            len(graph.edges),
             1,
         )
 
         edge = graph.edges[0]
 
-        self.assertIs(
-            edge.kind,
-            DependencyKind.CALL,
-        )
+        self.assertIs(edge.kind, DependencyKind.CALL)
 
         self.assertEqual(
             edge.source_path,
@@ -715,8 +658,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.target_symbol
                 == "Worker.execute"
             )
@@ -729,13 +671,7 @@ class DependencyGraphTests(
 
         self.assertEqual(
             tuple(
-                (
-                    edge.source_path,
-                    edge.target_path,
-                    edge.scope,
-                    edge.line,
-                    edge.resolution.proof,
-                )
+                (edge.source_path, edge.target_path, edge.scope, edge.line, edge.resolution.proof)
                 for edge in member_edges
             ),
             (
@@ -745,8 +681,7 @@ class DependencyGraphTests(
                     "class_call",
                     9,
                     (
-                        CallResolutionProof
-                        .SAME_FILE_CLASS_ATTRIBUTE_BINDING
+                        CallResolutionProof.SAME_FILE_CLASS_ATTRIBUTE_BINDING
                     ),
                 ),
                 (
@@ -755,8 +690,7 @@ class DependencyGraphTests(
                     "instance_call",
                     13,
                     (
-                        CallResolutionProof
-                        .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                        CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
                     ),
                 ),
             ),
@@ -766,8 +700,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.scope
                 == "instance_call"
                 and edge.target_symbol
@@ -813,8 +746,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.target_symbol
                 == "Base.execute"
             )
@@ -827,13 +759,7 @@ class DependencyGraphTests(
 
         self.assertEqual(
             tuple(
-                (
-                    edge.source_path,
-                    edge.target_path,
-                    edge.scope,
-                    edge.line,
-                    edge.resolution.proof,
-                )
+                (edge.source_path, edge.target_path, edge.scope, edge.line, edge.resolution.proof)
                 for edge in inherited_edges
             ),
             (
@@ -843,8 +769,7 @@ class DependencyGraphTests(
                     "class_call",
                     9,
                     (
-                        CallResolutionProof
-                        .SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING
+                        CallResolutionProof.SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING
                     ),
                 ),
                 (
@@ -853,8 +778,7 @@ class DependencyGraphTests(
                     "instance_call",
                     13,
                     (
-                        CallResolutionProof
-                        .LOCAL_INSTANCE_INHERITED_METHOD_BINDING
+                        CallResolutionProof.LOCAL_INSTANCE_INHERITED_METHOD_BINDING
                     ),
                 ),
             ),
@@ -864,8 +788,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.scope
                 == "instance_call"
                 and edge.target_symbol
@@ -917,8 +840,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.target_symbol
                 == "Base.execute"
             )
@@ -931,13 +853,7 @@ class DependencyGraphTests(
 
         self.assertEqual(
             tuple(
-                (
-                    edge.source_path,
-                    edge.target_path,
-                    edge.scope,
-                    edge.line,
-                    edge.resolution.proof,
-                )
+                (edge.source_path, edge.target_path, edge.scope, edge.line, edge.resolution.proof)
                 for edge in inherited_edges
             ),
             (
@@ -947,8 +863,7 @@ class DependencyGraphTests(
                     "class_call",
                     7,
                     (
-                        CallResolutionProof
-                        .INTERNAL_IMPORTED_INHERITED_CLASS_ATTRIBUTE_BINDING
+                        CallResolutionProof.INTERNAL_IMPORTED_INHERITED_CLASS_ATTRIBUTE_BINDING
                     ),
                 ),
                 (
@@ -957,8 +872,7 @@ class DependencyGraphTests(
                     "instance_call",
                     11,
                     (
-                        CallResolutionProof
-                        .LOCAL_INSTANCE_INHERITED_METHOD_BINDING
+                        CallResolutionProof.LOCAL_INSTANCE_INHERITED_METHOD_BINDING
                     ),
                 ),
             ),
@@ -968,8 +882,7 @@ class DependencyGraphTests(
             edge
             for edge in graph.edges
             if (
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 and edge.scope
                 == "instance_call"
                 and edge.target_symbol
@@ -1041,13 +954,7 @@ class DependencyGraphTests(
         self.assertEqual(len(inherited_edges), 2)
         self.assertEqual(
             tuple(
-                (
-                    edge.source_path,
-                    edge.target_path,
-                    edge.scope,
-                    edge.line,
-                    edge.resolution.proof,
-                )
+                (edge.source_path, edge.target_path, edge.scope, edge.line, edge.resolution.proof)
                 for edge in inherited_edges
             ),
             (

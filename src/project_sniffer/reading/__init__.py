@@ -3,10 +3,7 @@ from project_sniffer.reading.file_reader import (
     read_manifest_files,
     read_scanned_file,
 )
-from project_sniffer.reading.models import (
-    FileReadResult,
-    FileReadStatus,
-)
+from project_sniffer.reading.models import FileReadResult, FileReadStatus
 
 
 __all__ = [

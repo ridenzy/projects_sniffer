@@ -57,24 +57,15 @@ class CallIndexTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=read_result,
-            language=SourceLanguage.PYTHON,
-        )
+        return SourceEvidence(read_result=read_result, language=SourceLanguage.PYTHON)
 
     def graph(
         self,
         *evidence: SourceEvidence,
     ):
-        index = (
-            build_semantic_project_index(
-                evidence
-            )
-        )
+        index = build_semantic_project_index(evidence)
 
-        return build_dependency_graph(
-            index
-        )
+        return build_dependency_graph(index)
 
     def test_confirmed_calls_build_outbound_and_inbound_indexes(
         self,
@@ -99,23 +90,15 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         self.assertEqual(
-            len(
-                graph.edges
-            ),
+            len(graph.edges),
             3,
         )
 
         self.assertEqual(
-            tuple(
-                entry.endpoint
-                for entry
-                in call_index.outbound
-            ),
+            tuple(entry.endpoint for entry in call_index.outbound),
             (
                 CallEndpoint(
                     path="pkg/app.py",
@@ -129,13 +112,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                edge.line
-                for entry
-                in call_index.outbound
-                for edge
-                in entry.edges
-            ),
+            tuple(edge.line for entry in call_index.outbound for edge in entry.edges),
             (
                 2,
                 5,
@@ -144,8 +121,7 @@ class CallIndexTests(
 
         self.assertTrue(
             all(
-                edge.kind
-                is DependencyKind.CALL
+                edge.kind is DependencyKind.CALL
                 for entry
                 in call_index.outbound
                 for edge
@@ -154,9 +130,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            len(
-                call_index.inbound
-            ),
+            len(call_index.inbound),
             1,
         )
 
@@ -208,16 +182,10 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         self.assertEqual(
-            tuple(
-                entry.endpoint
-                for entry
-                in call_index.outbound
-            ),
+            tuple(entry.endpoint for entry in call_index.outbound),
             (
                 CallEndpoint(
                     path="pkg/app.py",
@@ -227,11 +195,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                entry.endpoint
-                for entry
-                in call_index.inbound
-            ),
+            tuple(entry.endpoint for entry in call_index.inbound),
             (
                 CallEndpoint(
                     path="pkg/worker.py",
@@ -259,16 +223,10 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         self.assertEqual(
-            tuple(
-                entry.endpoint
-                for entry
-                in call_index.outbound
-            ),
+            tuple(entry.endpoint for entry in call_index.outbound),
             (
                 CallEndpoint(
                     path="pkg/app.py",
@@ -278,11 +236,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                entry.endpoint
-                for entry
-                in call_index.inbound
-            ),
+            tuple(entry.endpoint for entry in call_index.inbound),
             (
                 CallEndpoint(
                     path="pkg/app.py",
@@ -310,9 +264,7 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         run_entry = next(
             entry
@@ -326,10 +278,7 @@ class CallIndexTests(
 
         self.assertIn(
             "Worker.execute",
-            tuple(
-                edge.target_symbol
-                for edge in run_entry.edges
-            ),
+            tuple(edge.target_symbol for edge in run_entry.edges),
         )
 
         method_entry = next(
@@ -377,9 +326,7 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         run_entry = next(
             entry
@@ -393,10 +340,7 @@ class CallIndexTests(
 
         self.assertIn(
             "Worker.execute",
-            tuple(
-                edge.target_symbol
-                for edge in run_entry.edges
-            ),
+            tuple(edge.target_symbol for edge in run_entry.edges),
         )
 
         method_entry = next(
@@ -447,9 +391,7 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         run_entry = next(
             entry
@@ -463,10 +405,7 @@ class CallIndexTests(
 
         self.assertIn(
             "Worker.execute",
-            tuple(
-                edge.target_symbol
-                for edge in run_entry.edges
-            ),
+            tuple(edge.target_symbol for edge in run_entry.edges),
         )
 
         method_entry = next(
@@ -509,38 +448,24 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            len(
-                graph.call_resolutions
-            ),
+            len(graph.call_resolutions),
             1,
         )
 
         self.assertIs(
             graph.call_resolutions[0].status,
             (
-                CallResolutionStatus
-                .POTENTIAL_INTERNAL
+                CallResolutionStatus.POTENTIAL_INTERNAL
             ),
         )
 
-        self.assertEqual(
-            graph.edges,
-            (),
-        )
+        self.assertEqual(graph.edges, ())
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
-        self.assertEqual(
-            call_index.outbound,
-            (),
-        )
+        self.assertEqual(call_index.outbound, ())
 
-        self.assertEqual(
-            call_index.inbound,
-            (),
-        )
+        self.assertEqual(call_index.inbound, ())
 
     def test_shallow_two_root_inherited_calls_enter_call_index(self) -> None:
         source = (
@@ -692,9 +617,7 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         class_entry = next(
             entry
@@ -707,13 +630,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.target_symbol,
-                    edge.line,
-                )
-                for edge in class_entry.edges
-            ),
+            tuple((edge.target_symbol, edge.line) for edge in class_entry.edges),
             (
                 (
                     "Worker.execute",
@@ -733,13 +650,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.target_symbol,
-                    edge.line,
-                )
-                for edge in instance_entry.edges
-            ),
+            tuple((edge.target_symbol, edge.line) for edge in instance_entry.edges),
             (
                 (
                     "Worker",
@@ -763,13 +674,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.scope,
-                    edge.line,
-                )
-                for edge in member_entry.edges
-            ),
+            tuple((edge.scope, edge.line) for edge in member_entry.edges),
             (
                 (
                     "class_call",
@@ -807,9 +712,7 @@ class CallIndexTests(
             ),
         )
 
-        call_index = build_call_index(
-            graph
-        )
+        call_index = build_call_index(graph)
 
         class_entry = next(
             entry
@@ -822,13 +725,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.target_symbol,
-                    edge.line,
-                )
-                for edge in class_entry.edges
-            ),
+            tuple((edge.target_symbol, edge.line) for edge in class_entry.edges),
             (
                 (
                     "Base.execute",
@@ -848,13 +745,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.target_symbol,
-                    edge.line,
-                )
-                for edge in instance_entry.edges
-            ),
+            tuple((edge.target_symbol, edge.line) for edge in instance_entry.edges),
             (
                 (
                     "Worker",
@@ -878,13 +769,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.scope,
-                    edge.line,
-                )
-                for edge in inherited_entry.edges
-            ),
+            tuple((edge.scope, edge.line) for edge in inherited_entry.edges),
             (
                 (
                     "class_call",
@@ -941,14 +826,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.target_path,
-                    edge.target_symbol,
-                    edge.line,
-                )
-                for edge in class_entry.edges
-            ),
+            tuple((edge.target_path, edge.target_symbol, edge.line) for edge in class_entry.edges),
             (
                 (
                     "pkg/base.py",
@@ -970,11 +848,7 @@ class CallIndexTests(
 
         self.assertEqual(
             tuple(
-                (
-                    edge.target_path,
-                    edge.target_symbol,
-                    edge.line,
-                )
+                (edge.target_path, edge.target_symbol, edge.line)
                 for edge in instance_entry.edges
             ),
             (
@@ -1002,14 +876,7 @@ class CallIndexTests(
         )
 
         self.assertEqual(
-            tuple(
-                (
-                    edge.source_path,
-                    edge.scope,
-                    edge.line,
-                )
-                for edge in inherited_entry.edges
-            ),
+            tuple((edge.source_path, edge.scope, edge.line) for edge in inherited_entry.edges),
             (
                 (
                     "pkg/app.py",
@@ -1069,10 +936,7 @@ class CallIndexTests(
             if entry.endpoint == CallEndpoint(path="pkg/app.py", symbol="class_call")
         )
         self.assertEqual(
-            tuple(
-                (edge.target_path, edge.target_symbol, edge.line)
-                for edge in class_entry.edges
-            ),
+            tuple((edge.target_path, edge.target_symbol, edge.line) for edge in class_entry.edges),
             (("pkg/root.py", "Root.execute", 7),),
         )
 
@@ -1098,10 +962,7 @@ class CallIndexTests(
             if entry.endpoint == CallEndpoint(path="pkg/root.py", symbol="Root.execute")
         )
         self.assertEqual(
-            tuple(
-                (edge.source_path, edge.scope, edge.line)
-                for edge in inherited_entry.edges
-            ),
+            tuple((edge.source_path, edge.scope, edge.line) for edge in inherited_entry.edges),
             (
                 ("pkg/app.py", "class_call", 7),
                 ("pkg/app.py", "instance_call", 11),

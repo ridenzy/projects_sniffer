@@ -2,21 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from project_sniffer.evidence.language_registry import (
-    classify_path_language,
-)
-from project_sniffer.evidence.models import (
-    SourceEvidence,
-    SourceLanguage,
-)
-from project_sniffer.reading import (
-    FileReadResult,
-)
+from project_sniffer.evidence.language_registry import classify_path_language
+from project_sniffer.evidence.models import SourceEvidence, SourceLanguage
+from project_sniffer.reading import FileReadResult
 
 
-def classify_source_language(
-    relative_path: str,
-) -> SourceLanguage:
+def classify_source_language(relative_path: str) -> SourceLanguage:
     """
     Classify a manifest-relative path without reading source content.
 
@@ -24,9 +15,7 @@ def classify_source_language(
     Unknown or ambiguous paths remain explicitly UNKNOWN.
     """
 
-    return classify_path_language(
-        relative_path
-    )
+    return classify_path_language(relative_path)
 
 
 def build_source_evidence(
@@ -42,9 +31,7 @@ def build_source_evidence(
     return tuple(
         SourceEvidence(
             read_result=result,
-            language=classify_source_language(
-                result.scanned_file.relative_path
-            ),
+            language=classify_source_language(result.scanned_file.relative_path),
         )
         for result in read_results
     )

@@ -17,13 +17,9 @@ class LegacyMainCompatibilityTests(
     ) -> None:
         self.original_cwd = Path.cwd()
 
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.personal_registry_path = (
             self.workspace
@@ -41,9 +37,7 @@ class LegacyMainCompatibilityTests(
 
         self.personal_registry_patcher.start()
 
-        os.chdir(
-            self.workspace
-        )
+        os.chdir(self.workspace)
 
         self.project = (
             self.workspace
@@ -126,22 +120,14 @@ class LegacyMainCompatibilityTests(
     ) -> None:
         self.personal_registry_patcher.stop()
 
-        os.chdir(
-            self.original_cwd
-        )
+        os.chdir(self.original_cwd)
 
         self.temporary_directory.cleanup()
 
     def test_legacy_entry_point_uses_packaged_runtime(
         self,
     ) -> None:
-        status = legacy_main.main(
-            [
-                str(
-                    self.project
-                )
-            ]
-        )
+        status = legacy_main.main([str(self.project)])
 
         self.assertEqual(
             status,
@@ -164,13 +150,9 @@ class LegacyMainCompatibilityTests(
             / "legacy-fixture-project-report.md"
         )
 
-        self.assertTrue(
-            architecture_path.is_file()
-        )
+        self.assertTrue(architecture_path.is_file())
 
-        self.assertTrue(
-            report_path.is_file()
-        )
+        self.assertTrue(report_path.is_file())
 
         architecture = (
             architecture_path.read_text(

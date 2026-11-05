@@ -4,25 +4,15 @@ import os
 from collections.abc import Iterable
 from pathlib import Path
 
-from project_sniffer.scanning.gitignore_matcher import (
-    GitIgnoreMatcher,
-)
-from project_sniffer.scanning.ignore_matcher import (
-    IgnoreMatcher,
-)
-from project_sniffer.scanning.models import (
-    ScanManifest,
-    ScannedFile,
-)
+from project_sniffer.scanning.gitignore_matcher import GitIgnoreMatcher
+from project_sniffer.scanning.ignore_matcher import IgnoreMatcher
+from project_sniffer.scanning.models import ScanManifest, ScannedFile
 
 
 def _normalize_excluded_directories(
     excluded_directories: Iterable[Path],
 ) -> tuple[Path, ...]:
-    return tuple(
-        path.expanduser().resolve()
-        for path in excluded_directories
-    )
+    return tuple(path.expanduser().resolve() for path in excluded_directories)
 
 
 def _is_excluded_directory(
@@ -31,10 +21,7 @@ def _is_excluded_directory(
 ) -> bool:
     candidate = directory.resolve()
 
-    return any(
-        candidate == excluded
-        for excluded in excluded_directories
-    )
+    return any(candidate == excluded for excluded in excluded_directories)
 
 
 def _policy_relative_path(
@@ -44,11 +31,7 @@ def _policy_relative_path(
     if path_prefix is None:
         return relative_path
 
-    normalized_prefix = (
-        path_prefix
-        .replace("\\", "/")
-        .strip("/")
-    )
+    normalized_prefix = path_prefix.replace("\\", "/").strip("/")
 
     if not normalized_prefix:
         return relative_path
@@ -80,45 +63,21 @@ def scan_project(
     directories.
     """
 
-    project_path = (
-        Path(
-            root_path
-        )
-        .expanduser()
-        .resolve()
-    )
+    project_path = Path(root_path).expanduser().resolve()
 
-    matcher = IgnoreMatcher.from_config(
-        ignore
-    )
+    matcher = IgnoreMatcher.from_config(ignore)
 
-    gitignore_matcher = (
-        GitIgnoreMatcher()
-    )
+    gitignore_matcher = GitIgnoreMatcher()
 
-    excluded = (
-        _normalize_excluded_directories(
-            excluded_directories
-        )
-    )
+    excluded = _normalize_excluded_directories(excluded_directories)
 
     directories: list[str] = []
     scanned_files: list[ScannedFile] = []
 
-    for root, dirs, files in os.walk(
-        project_path,
-        topdown=True,
-        followlinks=False,
-    ):
-        current_root = Path(
-            root
-        )
+    for root, dirs, files in os.walk(project_path, topdown=True, followlinks=False):
+        current_root = Path(root)
 
-        relative_root_path = (
-            current_root.relative_to(
-                project_path
-            )
-        )
+        relative_root_path = current_root.relative_to(project_path)
 
         relative_root = (
             ""
@@ -134,108 +93,54 @@ def scan_project(
 
         kept_directories: list[str] = []
 
-        for directory_name in sorted(
-            dirs
-        ):
-            candidate = (
-                current_root
-                / directory_name
-            )
+        for directory_name in sorted(dirs):
+            candidate = current_root / directory_name
 
-            relative_directory = (
-                candidate.relative_to(
-                    project_path
-                )
-                .as_posix()
-            )
+            relative_directory = candidate.relative_to(project_path).as_posix()
 
             policy_relative_directory = (
-                _policy_relative_path(
-                    relative_directory,
-                    ignore_path_prefix,
-                )
+                _policy_relative_path(relative_directory, ignore_path_prefix)
             )
 
-            if matcher.matches_folder(
-                directory_name,
-                policy_relative_directory,
-            ):
+            if matcher.matches_folder(directory_name, policy_relative_directory):
                 continue
 
-            if _is_excluded_directory(
-                candidate,
-                excluded,
-            ):
+            if _is_excluded_directory(candidate, excluded):
                 continue
 
             if (
-                apply_gitignore
-                and gitignore_matcher.matches_directory(
-                    relative_directory
-                )
+                apply_gitignore and gitignore_matcher.matches_directory(relative_directory)
             ):
                 continue
 
-            kept_directories.append(
-                directory_name
-            )
+            kept_directories.append(directory_name)
 
         dirs[:] = kept_directories
 
         if relative_root:
-            directories.append(
-                relative_root
-            )
+            directories.append(relative_root)
 
-        for filename in sorted(
-            files
-        ):
-            absolute_path = (
-                current_root
-                / filename
-            )
+        for filename in sorted(files):
+            absolute_path = current_root / filename
 
-            relative_path = (
-                absolute_path.relative_to(
-                    project_path
-                )
-                .as_posix()
-            )
+            relative_path = absolute_path.relative_to(project_path).as_posix()
 
-            policy_relative_path = (
-                _policy_relative_path(
-                    relative_path,
-                    ignore_path_prefix,
-                )
-            )
+            policy_relative_path = _policy_relative_path(relative_path, ignore_path_prefix)
 
-            if matcher.matches_file(
-                filename,
-                policy_relative_path,
-            ):
+            if matcher.matches_file(filename, policy_relative_path):
                 continue
 
             if (
-                apply_gitignore
-                and gitignore_matcher.matches_file(
-                    relative_path
-                )
+                apply_gitignore and gitignore_matcher.matches_file(relative_path)
             ):
                 continue
 
             scanned_files.append(
-                ScannedFile(
-                    absolute_path=absolute_path,
-                    relative_path=relative_path,
-                )
+                ScannedFile(absolute_path=absolute_path, relative_path=relative_path)
             )
 
     return ScanManifest(
         project_path=project_path,
-        directories=tuple(
-            directories
-        ),
-        files=tuple(
-            scanned_files
-        ),
+        directories=tuple(directories),
+        files=tuple(scanned_files),
     )

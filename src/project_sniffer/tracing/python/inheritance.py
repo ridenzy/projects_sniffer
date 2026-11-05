@@ -21,10 +21,7 @@ def direct_plain_base_name(
 
     base = class_node.bases[0]
 
-    if not isinstance(
-        base,
-        ast.Name,
-    ):
+    if not isinstance(base, ast.Name):
         return None
 
     return base.id

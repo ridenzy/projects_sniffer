@@ -20,14 +20,10 @@ class ProjectScannerTests(
     def setUp(
         self,
     ) -> None:
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
         self.project = (
-            Path(
-                self.temporary_directory.name
-            )
+            Path(self.temporary_directory.name)
             / "fixture-project"
         )
 
@@ -108,10 +104,7 @@ class ProjectScannerTests(
             },
         )
 
-        relative_files = {
-            scanned_file.relative_path
-            for scanned_file in manifest.files
-        }
+        relative_files = {scanned_file.relative_path for scanned_file in manifest.files}
 
         self.assertEqual(
             relative_files,
@@ -139,9 +132,7 @@ class ProjectScannerTests(
             / "fixture-project"
         )
 
-        output_directory.mkdir(
-            parents=True
-        )
+        output_directory.mkdir(parents=True)
 
         (
             output_directory
@@ -152,18 +143,9 @@ class ProjectScannerTests(
             newline="\n",
         )
 
-        manifest = scan_project(
-            self.project,
-            {},
-            excluded_directories=(
-                output_directory,
-            ),
-        )
+        manifest = scan_project(self.project, {}, excluded_directories=(output_directory,))
 
-        relative_files = {
-            scanned_file.relative_path
-            for scanned_file in manifest.files
-        }
+        relative_files = {scanned_file.relative_path for scanned_file in manifest.files}
 
         self.assertNotIn(
             (
@@ -196,11 +178,7 @@ class ProjectScannerTests(
                 },
             )
 
-            architecture = (
-                build_architecture(
-                    manifest
-                )
-            )
+            architecture = build_architecture(manifest)
 
         self.assertEqual(
             walk.call_count,
@@ -234,13 +212,9 @@ class ProjectScannerTests(
             / "private"
         )
 
-        first_private.mkdir(
-            parents=True
-        )
+        first_private.mkdir(parents=True)
 
-        second_private.mkdir(
-            parents=True
-        )
+        second_private.mkdir(parents=True)
 
         (
             first_private
@@ -274,10 +248,7 @@ class ProjectScannerTests(
             },
         )
 
-        relative_files = {
-            scanned_file.relative_path
-            for scanned_file in manifest.files
-        }
+        relative_files = {scanned_file.relative_path for scanned_file in manifest.files}
 
         self.assertNotIn(
             "docs/private/hidden.txt",
@@ -350,10 +321,7 @@ class ProjectScannerTests(
             },
         )
 
-        relative_files = {
-            scanned_file.relative_path
-            for scanned_file in manifest.files
-        }
+        relative_files = {scanned_file.relative_path for scanned_file in manifest.files}
 
         self.assertNotIn(
             "generated/ignored.txt",
@@ -427,10 +395,7 @@ class ProjectScannerTests(
             },
         )
 
-        relative_files = {
-            scanned_file.relative_path
-            for scanned_file in manifest.files
-        }
+        relative_files = {scanned_file.relative_path for scanned_file in manifest.files}
 
         self.assertIn(
             "src/keep.log",
@@ -492,10 +457,7 @@ class ProjectScannerTests(
             },
         )
 
-        relative_files = {
-            scanned_file.relative_path
-            for scanned_file in manifest.files
-        }
+        relative_files = {scanned_file.relative_path for scanned_file in manifest.files}
 
         self.assertNotIn(
             "generated/keep.txt",
@@ -511,10 +473,7 @@ class ProjectScannerTests(
             / "private"
         )
 
-        docs_root.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        docs_root.mkdir(parents=True, exist_ok=True)
 
         (
             docs_root
@@ -545,10 +504,7 @@ class ProjectScannerTests(
 
         self.assertIn(
             "hidden.md",
-            {
-                item.relative_path
-                for item in manifest.files
-            },
+            {item.relative_path for item in manifest.files},
         )
 
 
@@ -566,10 +522,7 @@ class ProjectScannerTests(
             / "archive"
         )
 
-        archive.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        archive.mkdir(parents=True, exist_ok=True)
 
         (
             docs_root
@@ -601,10 +554,7 @@ class ProjectScannerTests(
             ignore_path_prefix="docs/private",
         )
 
-        paths = {
-            item.relative_path
-            for item in manifest.files
-        }
+        paths = {item.relative_path for item in manifest.files}
 
         self.assertIn(
             "keep.md",

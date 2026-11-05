@@ -18,13 +18,9 @@ class OversizedReportIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.original_cwd = Path.cwd()
 
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.personal_registry_path = (
             self.workspace
@@ -42,9 +38,7 @@ class OversizedReportIntegrationTests(unittest.TestCase):
 
         self.personal_registry_patcher.start()
 
-        os.chdir(
-            self.workspace
-        )
+        os.chdir(self.workspace)
 
         self.project = (
             self.workspace
@@ -71,9 +65,7 @@ class OversizedReportIntegrationTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.personal_registry_patcher.stop()
 
-        os.chdir(
-            self.original_cwd
-        )
+        os.chdir(self.original_cwd)
 
         self.temporary_directory.cleanup()
 
@@ -104,13 +96,9 @@ class OversizedReportIntegrationTests(unittest.TestCase):
         with oversized_path.open(
             "wb"
         ) as file_handle:
-            file_handle.write(
-                prefix
-            )
+            file_handle.write(prefix)
 
-            file_handle.seek(
-                DEFAULT_MAX_SOURCE_BYTES
-            )
+            file_handle.seek(DEFAULT_MAX_SOURCE_BYTES)
 
             file_handle.write(
                 b"Z"
@@ -118,15 +106,11 @@ class OversizedReportIntegrationTests(unittest.TestCase):
 
         stdout = io.StringIO()
 
-        with redirect_stdout(
-            stdout
-        ):
+        with redirect_stdout(stdout):
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--report",
                 ]
             )

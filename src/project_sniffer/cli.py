@@ -6,9 +6,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from project_sniffer import __version__
-from project_sniffer.application import (
-    run_analysis,
-)
+from project_sniffer.application import run_analysis
 
 
 _DESCRIPTION = """\
@@ -46,26 +44,12 @@ Safety model:
 """
 
 
-class ProjectSnifferArgumentParser(
-    argparse.ArgumentParser
-):
+class ProjectSnifferArgumentParser(argparse.ArgumentParser):
     """Argument parser using Project Sniffer's invalid-input code."""
 
-    def error(
-        self,
-        message: str,
-    ) -> None:
-        self.print_usage(
-            sys.stderr
-        )
-
-        self.exit(
-            1,
-            (
-                f"{self.prog}: error: "
-                f"{message}\n"
-            ),
-        )
+    def error(self, message: str) -> None:
+        self.print_usage(sys.stderr)
+        self.exit(1, (f"{self.prog}: error: " f"{message}\n"))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,54 +59,33 @@ def build_parser() -> argparse.ArgumentParser:
         prog="sniff",
         description=_DESCRIPTION,
         epilog=_EPILOG,
-        formatter_class=(
-            argparse.RawDescriptionHelpFormatter
-        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
-        help=(
-            "Show the installed Project Sniffer "
-            "version and exit."
-        ),
+        help="Show the installed Project Sniffer version and exit.",
     )
 
     parser.add_argument(
         "--project",
         metavar="PATH",
-        help=(
-            "Full or relative path to the "
-            "project to inspect."
-        ),
+        help="Full or relative path to the project to inspect.",
     )
 
-    analyzers = (
-        parser.add_argument_group(
-            "implemented analyzers"
-        )
-    )
-
+    analyzers = parser.add_argument_group("implemented analyzers")
     analyzers.add_argument(
         "--architecture",
         action="store_true",
-        help=(
-            "Generate the current architecture "
-            "tree report."
-        ),
+        help="Generate the current architecture tree report.",
     )
-
     analyzers.add_argument(
         "--report",
         action="store_true",
-        help=(
-            "Generate the current readable "
-            "Markdown source report."
-        ),
+        help="Generate the current readable Markdown source report.",
     )
-
     analyzers.add_argument(
         "--trace",
         action="store_true",
@@ -133,12 +96,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    outputs = (
-        parser.add_argument_group(
-            "output capabilities"
-        )
-    )
-
+    outputs = parser.add_argument_group("output capabilities")
     outputs.add_argument(
         "--docs",
         action="store_true",
@@ -160,7 +118,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     scan_controls = parser.add_argument_group("scan controls")
-
     scan_controls.add_argument(
         "--minus-gitignore",
         action="store_true",
@@ -169,41 +126,22 @@ def build_parser() -> argparse.ArgumentParser:
             "for canonical analyzer scans."
         ),
     )
-
     return parser
 
 
-def main(
-    argv: Sequence[str] | None = None,
-) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the installed Project Sniffer CLI."""
 
     parser = build_parser()
+    args = parser.parse_args(argv)
+    requested_operation = args.architecture or args.report or args.trace or args.docs
 
-    args = parser.parse_args(
-        argv
-    )
-
-    requested_operation = (
-        args.architecture
-        or args.report
-        or args.trace
-        or args.docs
-    )
-
-    if (
-        not requested_operation
-        and args.project is None
-        and args.output is None
-    ):
+    if not requested_operation and args.project is None and args.output is None:
         parser.print_help()
         return 0
 
     if args.project is None:
-        parser.error(
-            "--project is required when "
-            "running an operation"
-        )
+        parser.error("--project is required when running an operation")
 
     if not requested_operation:
         parser.error(
@@ -214,9 +152,7 @@ def main(
 
     return run_analysis(
         project_value=args.project,
-        architecture_requested=(
-            args.architecture
-        ),
+        architecture_requested=args.architecture,
         report_requested=args.report,
         trace_requested=args.trace,
         docs_requested=args.docs,
