@@ -110,16 +110,10 @@ class GitIgnoreMatcher:
         self,
         relative_path: str,
     ) -> bool:
-        return self._is_ignored(
-            relative_path=relative_path,
-            is_directory=True,
-        )
+        return self._is_ignored(relative_path=relative_path, is_directory=True)
 
     def matches_file(
         self,
         relative_path: str,
     ) -> bool:
-        return self._is_ignored(
-            relative_path=relative_path,
-            is_directory=False,
-        )
+        return self._is_ignored(relative_path=relative_path, is_directory=False)

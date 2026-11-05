@@ -30,28 +30,16 @@ def build_semantic_project_index(
         source_path = parsed.source.read_result.scanned_file.relative_path
 
         imports.extend(
-            IndexedImport(
-                source_path=source_path,
-                evidence=item,
-            )
+            IndexedImport(source_path=source_path, evidence=item)
             for item in parsed.imports
         )
 
         symbols.extend(
-            IndexedSymbol(
-                source_path=source_path,
-                evidence=item,
-            )
+            IndexedSymbol(source_path=source_path, evidence=item)
             for item in parsed.symbols
         )
 
-        calls.extend(
-            IndexedCall(
-                source_path=source_path,
-                evidence=item,
-            )
-            for item in parsed.calls
-        )
+        calls.extend(IndexedCall(source_path=source_path, evidence=item) for item in parsed.calls)
 
     return SemanticProjectIndex(
         parsed_sources=parsed_sources,

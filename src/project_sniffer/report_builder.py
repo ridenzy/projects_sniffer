@@ -225,12 +225,7 @@ def build_report(
             continue
 
         try:
-            add_text_safely(
-                report_sections,
-                relative_path,
-                content,
-                evidence.language,
-            )
+            add_text_safely(report_sections, relative_path, content, evidence.language)
 
             added_files += 1
 

@@ -10,11 +10,7 @@ def parse_source_evidence(evidence: SourceEvidence) -> ParsedSource:
     result = evidence.read_result
 
     if result.status is not FileReadStatus.TEXT:
-        return ParsedSource(
-            source=evidence,
-            status=ParseStatus.NON_TEXT_SOURCE,
-            parser_id=None,
-        )
+        return ParsedSource(source=evidence, status=ParseStatus.NON_TEXT_SOURCE, parser_id=None)
 
     if result.content is None:
         return ParsedSource(

@@ -144,9 +144,7 @@ def run_analysis(
         return INVALID_INPUT
 
     project_name = project_path.name or "root"
-    output_directory = resolve_output_directory(
-        output_value, project_name, working_directory
-    )
+    output_directory = resolve_output_directory(output_value, project_name, working_directory)
 
     if output_directory.exists() and not output_directory.is_dir():
         print(
@@ -213,9 +211,7 @@ def run_analysis(
     source_evidence = ()
 
     if (
-        manifest is not None
-        and manifest.files
-        and (report_requested or trace_requested)
+        manifest is not None and manifest.files and (report_requested or trace_requested)
     ):
         try:
             read_results = read_manifest_files(manifest)

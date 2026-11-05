@@ -44,9 +44,7 @@ def build_architecture(manifest: ScanManifest) -> str:
         for filename in sorted(files_by_parent.get(relative_directory, [])):
             lines.append(f"{subindent}{filename}")
 
-        for directory_name in sorted(
-            directories_by_parent.get(relative_directory, [])
-        ):
+        for directory_name in sorted(directories_by_parent.get(relative_directory, [])):
             child_relative = (
                 directory_name
                 if not relative_directory

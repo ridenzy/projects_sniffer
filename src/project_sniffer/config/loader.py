@@ -229,9 +229,7 @@ def load_personal_ignores(
             "schema-version-1 per-project format."
         )
 
-    return _load_project_profile(
-        registry=data, project_path=project_path, source=str(path)
-    )
+    return _load_project_profile(registry=data, project_path=project_path, source=str(path))
 
 
 def merge_ignore_configs(
@@ -261,7 +259,5 @@ def load_ignore_config(
 
     return merge_ignore_configs(
         load_recommended_ignores(),
-        load_personal_ignores(
-            project_path=project_path, registry_path=personal_registry_path
-        ),
+        load_personal_ignores(project_path=project_path, registry_path=personal_registry_path),
     )

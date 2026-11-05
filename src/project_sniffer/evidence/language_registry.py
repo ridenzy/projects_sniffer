@@ -29,11 +29,7 @@ class LanguageDefinition:
     def path_recognized(
         self,
     ) -> bool:
-        return bool(
-            self.suffixes
-            or self.exact_suffixes
-            or self.basenames
-        )
+        return bool(self.suffixes or self.exact_suffixes or self.basenames)
 
 
 def _definition(
@@ -761,10 +757,7 @@ LANGUAGE_DEFINITIONS = (
 )
 
 
-_DEFINITION_BY_LANGUAGE = {
-    definition.language: definition
-    for definition in LANGUAGE_DEFINITIONS
-}
+_DEFINITION_BY_LANGUAGE = {definition.language: definition for definition in LANGUAGE_DEFINITIONS}
 
 
 def _build_indexes() -> tuple[
@@ -780,60 +773,45 @@ def _build_indexes() -> tuple[
         for basename in definition.basenames:
             key = basename.casefold()
 
-            existing = basename_index.get(
-                key
-            )
+            existing = basename_index.get(key)
 
             if (
-                existing is not None
-                and existing is not definition.language
+                existing is not None and existing is not definition.language
             ):
                 raise RuntimeError(
                     "duplicate language basename rule: "
                     f"{basename}"
                 )
 
-            basename_index[key] = (
-                definition.language
-            )
+            basename_index[key] = definition.language
 
         for suffix in definition.suffixes:
             key = suffix.casefold()
 
-            existing = folded_suffix_index.get(
-                key
-            )
+            existing = folded_suffix_index.get(key)
 
             if (
-                existing is not None
-                and existing is not definition.language
+                existing is not None and existing is not definition.language
             ):
                 raise RuntimeError(
                     "duplicate language suffix rule: "
                     f"{suffix}"
                 )
 
-            folded_suffix_index[key] = (
-                definition.language
-            )
+            folded_suffix_index[key] = definition.language
 
         for suffix in definition.exact_suffixes:
-            existing = exact_suffix_index.get(
-                suffix
-            )
+            existing = exact_suffix_index.get(suffix)
 
             if (
-                existing is not None
-                and existing is not definition.language
+                existing is not None and existing is not definition.language
             ):
                 raise RuntimeError(
                     "duplicate exact language suffix rule: "
                     f"{suffix}"
                 )
 
-            exact_suffix_index[suffix] = (
-                definition.language
-            )
+            exact_suffix_index[suffix] = definition.language
 
     folded_suffix_rules = tuple(
         sorted(
@@ -855,26 +833,16 @@ def _build_indexes() -> tuple[
         )
     )
 
-    return (
-        basename_index,
-        folded_suffix_rules,
-        exact_suffix_rules,
-    )
+    return (basename_index, folded_suffix_rules, exact_suffix_rules)
 
 
-(
-    _BASENAME_INDEX,
-    _FOLDED_SUFFIX_RULES,
-    _EXACT_SUFFIX_RULES,
-) = _build_indexes()
+_BASENAME_INDEX, _FOLDED_SUFFIX_RULES, _EXACT_SUFFIX_RULES = _build_indexes()
 
 
 def get_language_definition(
     language: SourceLanguage,
 ) -> LanguageDefinition:
-    return _DEFINITION_BY_LANGUAGE[
-        language
-    ]
+    return _DEFINITION_BY_LANGUAGE[language]
 
 
 def classify_path_language(
@@ -892,17 +860,11 @@ def classify_path_language(
         "/",
     )
 
-    path = PurePosixPath(
-        normalized
-    )
+    path = PurePosixPath(normalized)
 
     filename = path.name
 
-    basename_language = (
-        _BASENAME_INDEX.get(
-            filename.casefold()
-        )
-    )
+    basename_language = _BASENAME_INDEX.get(filename.casefold())
 
     if basename_language is not None:
         return basename_language
@@ -910,9 +872,7 @@ def classify_path_language(
     for suffix, language in (
         _EXACT_SUFFIX_RULES
     ):
-        if filename.endswith(
-            suffix
-        ):
+        if filename.endswith(suffix):
             return language
 
     folded_filename = filename.casefold()
@@ -920,9 +880,7 @@ def classify_path_language(
     for suffix, language in (
         _FOLDED_SUFFIX_RULES
     ):
-        if folded_filename.endswith(
-            suffix
-        ):
+        if folded_filename.endswith(suffix):
             return language
 
     return SourceLanguage.UNKNOWN

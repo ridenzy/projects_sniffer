@@ -138,24 +138,14 @@ def _module_import_bound_name(resolution: ImportResolution) -> str | None:
 
 def _ordered_unique_targets(targets: Sequence[CallTarget]) -> tuple[CallTarget, ...]:
     unique = {
-        (
-            target.source_path,
-            target.qualified_name,
-            target.kind,
-            target.line,
-        ): target
+        (target.source_path, target.qualified_name, target.kind, target.line): target
         for target in targets
     }
 
     return tuple(
         sorted(
             unique.values(),
-            key=lambda item: (
-                item.source_path,
-                item.line,
-                item.qualified_name,
-                item.kind.value,
-            ),
+            key=lambda item: (item.source_path, item.line, item.qualified_name, item.kind.value),
         )
     )
 
@@ -201,10 +191,7 @@ def _confirmed_import_target(
         return None, None
 
     if (
-        symbol.is_assigned()
-        or symbol.is_parameter()
-        or symbol.is_nonlocal()
-        or symbol.is_free()
+        symbol.is_assigned() or symbol.is_parameter() or symbol.is_nonlocal() or symbol.is_free()
     ):
         return None, None
 
@@ -234,9 +221,7 @@ def _python_syntax_trees_by_path(
         source_path = parsed.source.read_result.scanned_file.relative_path
 
         try:
-            trees[source_path] = ast.parse(
-                content, filename=source_path, type_comments=True
-            )
+            trees[source_path] = ast.parse(content, filename=source_path, type_comments=True)
         except SyntaxError:
             continue
 
@@ -244,11 +229,7 @@ def _python_syntax_trees_by_path(
 
 
 def _ast_parent_map(tree: ast.AST) -> dict[ast.AST, ast.AST]:
-    return {
-        child: parent
-        for parent in ast.walk(tree)
-        for child in ast.iter_child_nodes(parent)
-    }
+    return {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
 
 def _call_executes_during_module_initialization(
     *,
@@ -357,15 +338,12 @@ def _call_has_unmodeled_scope_shadow(
         parent = parent_by_child.get(node)
         while parent is not None:
             if (
-                isinstance(parent, ast.Lambda)
-                and _lambda_binds_name(parent, target_name)
+                isinstance(parent, ast.Lambda) and _lambda_binds_name(parent, target_name)
             ):
                 return True
 
             if (
-                isinstance(
-                    parent, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
-                )
+                isinstance(parent, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp))
                 and _comprehension_binds_name(parent, target_name)
             ):
                 return True
@@ -381,9 +359,7 @@ def _executes_in_module_scope(
 ) -> bool:
     parent = parent_by_child.get(node)
     while parent is not None:
-        if isinstance(
-            parent, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
-        ):
+        if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
             return False
         if isinstance(parent, ast.Module):
             return True
@@ -471,10 +447,7 @@ def _definition_matches_target(node: ast.stmt, target: CallTarget) -> bool:
         return node.name == target.qualified_name and target.kind is SymbolKind.FUNCTION
 
     if isinstance(node, ast.AsyncFunctionDef):
-        return (
-            node.name == target.qualified_name
-            and target.kind is SymbolKind.ASYNC_FUNCTION
-        )
+        return node.name == target.qualified_name and target.kind is SymbolKind.ASYNC_FUNCTION
 
     if isinstance(node, ast.ClassDef):
         return node.name == target.qualified_name and target.kind is SymbolKind.CLASS
@@ -530,73 +503,39 @@ def _attribute_call_has_implicit_scope(
     if tree is None:
         return False
 
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
+    parent_by_child = _ast_parent_map(tree)
 
-    for node in ast.walk(
-        tree
-    ):
+    for node in ast.walk(tree):
         if (
-            not isinstance(
-                node,
-                ast.Call,
-            )
-            or node.lineno != call_line
+            not isinstance(node, ast.Call) or node.lineno != call_line
         ):
             continue
 
         parts: list[str] = []
         current: ast.AST = node.func
 
-        while isinstance(
-            current,
-            ast.Attribute,
-        ):
-            parts.append(
-                current.attr
-            )
+        while isinstance(current, ast.Attribute):
+            parts.append(current.attr)
             current = current.value
 
-        if not isinstance(
-            current,
-            ast.Name,
-        ):
+        if not isinstance(current, ast.Name):
             continue
 
-        parts.append(
-            current.id
-        )
+        parts.append(current.id)
 
-        if tuple(
-            reversed(
-                parts
-            )
-        ) != target_parts:
+        if tuple(reversed(parts)) != target_parts:
             continue
 
-        parent = parent_by_child.get(
-            node
-        )
+        parent = parent_by_child.get(node)
 
         while parent is not None:
             if isinstance(
                 parent,
-                (
-                    ast.Lambda,
-                    ast.ListComp,
-                    ast.SetComp,
-                    ast.DictComp,
-                    ast.GeneratorExp,
-                ),
+                (ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp),
             ):
                 return True
 
-            parent = parent_by_child.get(
-                parent
-            )
+            parent = parent_by_child.get(parent)
 
     return False
 
@@ -609,88 +548,47 @@ def _attribute_call_executes_during_module_initialization(
     if tree is None:
         return False
 
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
+    parent_by_child = _ast_parent_map(tree)
 
-    for node in ast.walk(
-        tree
-    ):
+    for node in ast.walk(tree):
         if (
-            not isinstance(
-                node,
-                ast.Call,
-            )
-            or node.lineno != call_line
+            not isinstance(node, ast.Call) or node.lineno != call_line
         ):
             continue
 
         parts: list[str] = []
         current: ast.AST = node.func
 
-        while isinstance(
-            current,
-            ast.Attribute,
-        ):
-            parts.append(
-                current.attr
-            )
+        while isinstance(current, ast.Attribute):
+            parts.append(current.attr)
             current = current.value
 
-        if not isinstance(
-            current,
-            ast.Name,
-        ):
+        if not isinstance(current, ast.Name):
             continue
 
-        parts.append(
-            current.id
-        )
+        parts.append(current.id)
 
-        if tuple(
-            reversed(
-                parts
-            )
-        ) != target_parts:
+        if tuple(reversed(parts)) != target_parts:
             continue
 
         child: ast.AST = node
-        parent = parent_by_child.get(
-            node
-        )
+        parent = parent_by_child.get(node)
         deferred = False
 
         while parent is not None:
-            if isinstance(
-                parent,
-                (
-                    ast.FunctionDef,
-                    ast.AsyncFunctionDef,
-                ),
-            ):
-                if any(
-                    child is statement
-                    for statement in parent.body
-                ):
+            if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if any(child is statement for statement in parent.body):
                     deferred = True
                     break
 
             if (
-                isinstance(
-                    parent,
-                    ast.Lambda,
-                )
-                and child is parent.body
+                isinstance(parent, ast.Lambda) and child is parent.body
             ):
                 deferred = True
                 break
 
             child = parent
-            parent = parent_by_child.get(
-                parent
-            )
+            parent = parent_by_child.get(parent)
 
         if not deferred:
             return True
@@ -703,21 +601,13 @@ def _find_direct_class_definition(
     target: CallTarget,
 ) -> ast.ClassDef | None:
     if (
-        tree is None
-        or target.kind is not SymbolKind.CLASS
+        tree is None or target.kind is not SymbolKind.CLASS
     ):
         return None
 
     for node in tree.body:
         if (
-            isinstance(
-                node,
-                ast.ClassDef,
-            )
-            and _definition_matches_target(
-                node,
-                target,
-            )
+            isinstance(node, ast.ClassDef) and _definition_matches_target(node, target)
         ):
             return node
 
@@ -727,36 +617,21 @@ def _executes_in_class_scope(
     node: ast.AST,
     *,
     class_node: ast.ClassDef,
-    parent_by_child: dict[
-        ast.AST,
-        ast.AST,
-    ],
+    parent_by_child: dict[ast.AST, ast.AST],
 ) -> bool:
     if node is class_node:
         return False
 
-    parent = parent_by_child.get(
-        node
-    )
+    parent = parent_by_child.get(node)
 
     while parent is not None:
         if parent is class_node:
             return True
 
-        if isinstance(
-            parent,
-            (
-                ast.FunctionDef,
-                ast.AsyncFunctionDef,
-                ast.Lambda,
-                ast.ClassDef,
-            ),
-        ):
+        if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
             return False
 
-        parent = parent_by_child.get(
-            parent
-        )
+        parent = parent_by_child.get(parent)
 
     return False
 
@@ -765,23 +640,12 @@ def _class_binding_sites(
     tree: ast.Module,
     class_node: ast.ClassDef,
     name: str,
-) -> tuple[
-    tuple[str, int],
-    ...,
-]:
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
+) -> tuple[tuple[str, int], ...]:
+    parent_by_child = _ast_parent_map(tree)
 
-    sites: list[
-        tuple[str, int]
-    ] = []
+    sites: list[tuple[str, int]] = []
 
-    for node in ast.walk(
-        class_node
-    ):
+    for node in ast.walk(class_node):
         if not _executes_in_class_scope(
             node,
             class_node=class_node,
@@ -789,14 +653,7 @@ def _class_binding_sites(
         ):
             continue
 
-        if isinstance(
-            node,
-            (
-                ast.FunctionDef,
-                ast.AsyncFunctionDef,
-                ast.ClassDef,
-            ),
-        ):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             if node.name == name:
                 sites.append(
                     (
@@ -807,10 +664,7 @@ def _class_binding_sites(
 
             continue
 
-        if isinstance(
-            node,
-            ast.Import,
-        ):
+        if isinstance(node, ast.Import):
             for alias in node.names:
                 bound_name = (
                     alias.asname
@@ -829,10 +683,7 @@ def _class_binding_sites(
 
             continue
 
-        if isinstance(
-            node,
-            ast.ImportFrom,
-        ):
+        if isinstance(node, ast.ImportFrom):
             for alias in node.names:
                 if alias.name == "*":
                     sites.append(
@@ -844,10 +695,7 @@ def _class_binding_sites(
 
                     continue
 
-                bound_name = (
-                    alias.asname
-                    or alias.name
-                )
+                bound_name = alias.asname or alias.name
 
                 if bound_name == name:
                     sites.append(
@@ -860,18 +708,9 @@ def _class_binding_sites(
             continue
 
         if (
-            isinstance(
-                node,
-                ast.Name,
-            )
+            isinstance(node, ast.Name)
             and node.id == name
-            and isinstance(
-                node.ctx,
-                (
-                    ast.Store,
-                    ast.Del,
-                ),
-            )
+            and isinstance(node.ctx, (ast.Store, ast.Del))
         ):
             sites.append(
                 (
@@ -883,11 +722,7 @@ def _class_binding_sites(
             continue
 
         if (
-            isinstance(
-                node,
-                ast.ExceptHandler,
-            )
-            and node.name == name
+            isinstance(node, ast.ExceptHandler) and node.name == name
         ):
             sites.append(
                 (
@@ -899,11 +734,7 @@ def _class_binding_sites(
             continue
 
         if (
-            isinstance(
-                node,
-                ast.MatchAs,
-            )
-            and node.name == name
+            isinstance(node, ast.MatchAs) and node.name == name
         ):
             sites.append(
                 (
@@ -915,11 +746,7 @@ def _class_binding_sites(
             continue
 
         if (
-            isinstance(
-                node,
-                ast.MatchStar,
-            )
-            and node.name == name
+            isinstance(node, ast.MatchStar) and node.name == name
         ):
             sites.append(
                 (
@@ -931,11 +758,7 @@ def _class_binding_sites(
             continue
 
         if (
-            isinstance(
-                node,
-                ast.MatchMapping,
-            )
-            and node.rest == name
+            isinstance(node, ast.MatchMapping) and node.rest == name
         ):
             sites.append(
                 (
@@ -944,9 +767,7 @@ def _class_binding_sites(
                 )
             )
 
-    return tuple(
-        sites
-    )
+    return tuple(sites)
 
 def _named_receiver_attribute_mutation_exists(
     *,
@@ -957,47 +778,25 @@ def _named_receiver_attribute_mutation_exists(
     if tree is None:
         return True
 
-    for node in ast.walk(
-        tree
-    ):
+    for node in ast.walk(tree):
         if (
-            isinstance(
-                node,
-                ast.Attribute,
-            )
+            isinstance(node, ast.Attribute)
             and node.attr == member_name
-            and isinstance(
-                node.value,
-                ast.Name,
-            )
+            and isinstance(node.value, ast.Name)
             and node.value.id == receiver_name
-            and isinstance(
-                node.ctx,
-                (
-                    ast.Store,
-                    ast.Del,
-                ),
-            )
+            and isinstance(node.ctx, (ast.Store, ast.Del))
         ):
             return True
 
         if (
-            isinstance(
-                node,
-                ast.Call,
-            )
-            and isinstance(
-                node.func,
-                ast.Name,
-            )
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
             and node.func.id
             in {
                 "setattr",
                 "delattr",
             }
-            and len(
-                node.args
-            ) >= 2
+            and len(node.args) >= 2
             and isinstance(
                 node.args[0],
                 ast.Name,
@@ -1025,20 +824,13 @@ def _confirmed_direct_class_member_definition_target(
     if tree is None:
         return None
 
-    class_node = (
-        _find_direct_class_definition(
-            tree=tree,
-            target=class_target,
-        )
-    )
+    class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
     if class_node is None:
         return None
 
     member_name = (
-        member_target
-        .qualified_name
-        .rsplit(
+        member_target.qualified_name.rsplit(
             ".",
             1,
         )[-1]
@@ -1050,15 +842,9 @@ def _confirmed_direct_class_member_definition_target(
     )
 
     if (
-        member_target.source_path
-        != class_target.source_path
-        or member_target.qualified_name
-        != expected_qualified_name
-        or member_target.kind
-        not in {
-            SymbolKind.FUNCTION,
-            SymbolKind.ASYNC_FUNCTION,
-        }
+        member_target.source_path != class_target.source_path
+        or member_target.qualified_name != expected_qualified_name
+        or member_target.kind not in {SymbolKind.FUNCTION, SymbolKind.ASYNC_FUNCTION}
     ):
         return None
 
@@ -1067,35 +853,20 @@ def _confirmed_direct_class_member_definition_target(
             node
             for node in class_node.body
             if (
-                isinstance(
-                    node,
-                    (
-                        ast.FunctionDef,
-                        ast.AsyncFunctionDef,
-                    ),
-                )
-                and node.name
-                == member_name
-                and node.lineno
-                == member_target.line
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name == member_name
+                and node.lineno == member_target.line
             )
         ),
         None,
     )
 
     if (
-        definition is None
-        or definition.decorator_list
+        definition is None or definition.decorator_list
     ):
         return None
 
-    binding_sites = (
-        _class_binding_sites(
-            tree=tree,
-            class_node=class_node,
-            name=member_name,
-        )
-    )
+    binding_sites = _class_binding_sites(tree=tree, class_node=class_node, name=member_name)
 
     if binding_sites != (
         (
@@ -1126,17 +897,10 @@ def _confirmed_class_member_target(
     if tree is None:
         return None
 
-    class_node = (
-        _find_direct_class_definition(
-            tree=tree,
-            target=class_target,
-        )
-    )
+    class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
     if (
-        class_node is None
-        or class_node.bases
-        or class_node.keywords
+        class_node is None or class_node.bases or class_node.keywords
     ):
         return None
 
@@ -1174,20 +938,10 @@ def _confirmed_direct_base_shape(
     if stable_base_target is None:
         return None
 
-    base_node = (
-        _find_direct_class_definition(
-            tree=base_tree,
-            target=base_target,
-        )
-    )
+    base_node = _find_direct_class_definition(tree=base_tree, target=base_target)
 
     if (
-        base_node is None
-        or base_node.keywords
-        or (
-            base_node.bases
-            and not allow_deeper
-        )
+        base_node is None or base_node.keywords or (base_node.bases and (not allow_deeper))
     ):
         return None
 
@@ -1226,22 +980,14 @@ def _confirmed_same_file_direct_base_target(
     *,
     tree: ast.Module | None,
     class_target: CallTarget,
-    top_level_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
+    top_level_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
     allow_deeper: bool = False,
     base_name: str | None = None,
 ) -> CallTarget | None:
     if tree is None:
         return None
 
-    class_node = (
-        _find_direct_class_definition(
-            tree=tree,
-            target=class_target,
-        )
-    )
+    class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
     if class_node is None:
         return None
@@ -1254,21 +1000,11 @@ def _confirmed_same_file_direct_base_target(
 
     same_file_base_candidates = tuple(
         target
-        for target in top_level_symbols.get(
-            (
-                class_target.source_path,
-                base_name,
-            ),
-            (),
-        )
+        for target in top_level_symbols.get((class_target.source_path, base_name), ())
         if target.kind is SymbolKind.CLASS
     )
 
-    ordered_base_candidates = (
-        _ordered_unique_targets(
-            same_file_base_candidates
-        )
-    )
+    ordered_base_candidates = _ordered_unique_targets(same_file_base_candidates)
 
     base_target, _ = (
         _confirmed_same_file_target(
@@ -1301,119 +1037,58 @@ def _confirmed_imported_direct_base_target(
     *,
     tree: ast.Module | None,
     class_target: CallTarget,
-    top_level_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-    import_resolutions: Sequence[
-        ImportResolution
-    ],
-    symbol_tables: dict[
-        str,
-        symtable.SymbolTable,
-    ],
-    syntax_trees: dict[
-        str,
-        ast.Module,
-    ],
+    top_level_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+    import_resolutions: Sequence[ImportResolution],
+    symbol_tables: dict[str, symtable.SymbolTable],
+    syntax_trees: dict[str, ast.Module],
     allow_deeper: bool = False,
 ) -> CallTarget | None:
     if tree is None:
         return None
 
-    class_node = (
-        _find_direct_class_definition(
-            tree=tree,
-            target=class_target,
-        )
-    )
+    class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
     if class_node is None:
         return None
 
-    base_name = direct_plain_base_name(
-        class_node
-    )
+    base_name = direct_plain_base_name(class_node)
 
     if base_name is None:
         return None
 
-    imported_classes: list[
-        CallTarget
-    ] = []
+    imported_classes: list[CallTarget] = []
 
-    imported_bindings: list[
-        tuple[
-            ImportResolution,
-            CallTarget,
-        ]
-    ] = []
+    imported_bindings: list[tuple[ImportResolution, CallTarget]] = []
 
     for resolution in import_resolutions:
         if (
-            resolution.source_path
-            != class_target.source_path
-            or resolution.status
-            is not (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
-            )
-            or resolution.target_path
-            is None
-            or not _binding_is_visible(
-                resolution.evidence.scope,
-                None,
-            )
-            or _import_bound_name(
-                resolution
-            )
-            != base_name
-            or resolution.evidence.imported_name
-            is None
+            resolution.source_path != class_target.source_path
+            or resolution.status is not ImportResolutionStatus.RESOLVED_INTERNAL
+            or resolution.target_path is None
+            or not _binding_is_visible(resolution.evidence.scope, None)
+            or _import_bound_name(resolution) != base_name
+            or resolution.evidence.imported_name is None
         ):
             continue
 
         matching_classes = tuple(
             target
             for target in top_level_symbols.get(
-                (
-                    resolution.target_path,
-                    (
-                        resolution
-                        .evidence
-                        .imported_name
-                    ),
-                ),
+                (resolution.target_path, resolution.evidence.imported_name),
                 (),
             )
-            if target.kind
-            is SymbolKind.CLASS
+            if target.kind is SymbolKind.CLASS
         )
 
-        imported_classes.extend(
-            matching_classes
-        )
+        imported_classes.extend(matching_classes)
 
-        imported_bindings.extend(
-            (
-                resolution,
-                target,
-            )
-            for target
-            in matching_classes
-        )
+        imported_bindings.extend((resolution, target) for target in matching_classes)
 
-    ordered_base_candidates = (
-        _ordered_unique_targets(
-            imported_classes
-        )
-    )
+    ordered_base_candidates = _ordered_unique_targets(imported_classes)
 
     base_target, base_proof = (
         _confirmed_import_target(
-            root=symbol_tables.get(
-                class_target.source_path
-            ),
+            root=symbol_tables.get(class_target.source_path),
             target_name=base_name,
             call_scope=None,
             call_line=class_node.lineno,
@@ -1428,21 +1103,14 @@ def _confirmed_imported_direct_base_target(
     )
 
     if (
-        base_target is None
-        or base_proof
-        is not (
-            CallResolutionProof
-            .INTERNAL_IMPORT_BINDING
-        )
+        base_target is None or base_proof is not CallResolutionProof.INTERNAL_IMPORT_BINDING
     ):
         return None
 
     return _confirmed_direct_base_shape(
         class_tree=tree,
         class_target=class_target,
-        base_tree=syntax_trees.get(
-            base_target.source_path
-        ),
+        base_tree=syntax_trees.get(base_target.source_path),
         base_target=base_target,
         base_binding_name=base_name,
         allow_deeper=allow_deeper,
@@ -1467,10 +1135,7 @@ def _confirmed_linear_class_ancestry(
     inherited_proof = None
 
     while True:
-        current_node = _find_direct_class_definition(
-            tree=current_tree,
-            target=current_target,
-        )
+        current_node = _find_direct_class_definition(tree=current_tree, target=current_target)
 
         if current_node is None or current_node.keywords:
             return None
@@ -1488,10 +1153,7 @@ def _confirmed_linear_class_ancestry(
             allow_deeper=True,
         )
 
-        hop_proof = (
-            CallResolutionProof
-            .SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING
-        )
+        hop_proof = CallResolutionProof.SAME_FILE_INHERITED_CLASS_ATTRIBUTE_BINDING
 
         if base_target is None:
             base_target = _confirmed_imported_direct_base_target(
@@ -1504,18 +1166,12 @@ def _confirmed_linear_class_ancestry(
                 allow_deeper=True,
             )
 
-            hop_proof = (
-                CallResolutionProof
-                .INTERNAL_IMPORTED_INHERITED_CLASS_ATTRIBUTE_BINDING
-            )
+            hop_proof = CallResolutionProof.INTERNAL_IMPORTED_INHERITED_CLASS_ATTRIBUTE_BINDING
 
         if base_target is None:
             return None
 
-        identity = (
-            base_target.source_path,
-            base_target.qualified_name,
-        )
+        identity = (base_target.source_path, base_target.qualified_name)
 
         if identity in seen:
             return None
@@ -1527,9 +1183,7 @@ def _confirmed_linear_class_ancestry(
         seen.add(identity)
 
         current_target = base_target
-        current_tree = syntax_trees.get(
-            base_target.source_path
-        )
+        current_tree = syntax_trees.get(base_target.source_path)
 
         if current_tree is None:
             return None
@@ -1544,14 +1198,8 @@ def _confirmed_same_file_subclass_member_target(
     tree: ast.Module | None,
     class_target: CallTarget,
     member_target: CallTarget,
-    top_level_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-) -> tuple[
-    tuple[CallTarget, ...],
-    CallTarget,
-] | None:
+    top_level_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+) -> tuple[tuple[CallTarget, ...], CallTarget] | None:
     if tree is None:
         return None
 
@@ -1707,19 +1355,12 @@ def _confirmed_direct_inherited_member_target(
     if tree is None:
         return None
 
-    class_node = _find_direct_class_definition(
-        tree=tree,
-        target=class_target,
-    )
+    class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
     if class_node is None:
         return None
 
-    if _class_binding_sites(
-        tree=tree,
-        class_node=class_node,
-        name=member_name,
-    ):
+    if _class_binding_sites(tree=tree, class_node=class_node, name=member_name):
         return None
 
     if _named_receiver_attribute_mutation_exists(
@@ -1754,20 +1395,13 @@ def _confirmed_direct_inherited_member_target(
         start=1,
     ):
         child_target = ancestry[position - 1]
-        child_tree = syntax_trees.get(
-            child_target.source_path
-        )
-        child_node = _find_direct_class_definition(
-            tree=child_tree,
-            target=child_target,
-        )
+        child_tree = syntax_trees.get(child_target.source_path)
+        child_node = _find_direct_class_definition(tree=child_tree, target=child_target)
 
         if child_tree is None or child_node is None:
             return None
 
-        base_binding_name = direct_plain_base_name(
-            child_node
-        )
+        base_binding_name = direct_plain_base_name(child_node)
 
         if (
             base_binding_name is None
@@ -1779,13 +1413,8 @@ def _confirmed_direct_inherited_member_target(
         ):
             return None
 
-        ancestor_tree = syntax_trees.get(
-            ancestor_target.source_path
-        )
-        ancestor_node = _find_direct_class_definition(
-            tree=ancestor_tree,
-            target=ancestor_target,
-        )
+        ancestor_tree = syntax_trees.get(ancestor_target.source_path)
+        ancestor_node = _find_direct_class_definition(tree=ancestor_tree, target=ancestor_target)
 
         if ancestor_tree is None or ancestor_node is None:
             return None
@@ -1815,11 +1444,7 @@ def _confirmed_direct_inherited_member_target(
 
             return ancestry, member_target, inherited_proof
 
-        if _class_binding_sites(
-            tree=ancestor_tree,
-            class_node=ancestor_node,
-            name=member_name,
-        ):
+        if _class_binding_sites(tree=ancestor_tree, class_node=ancestor_node, name=member_name):
             return None
 
         if _named_receiver_attribute_mutation_exists(
@@ -1845,26 +1470,15 @@ def _class_targets_allow_inherited_instance_method_proof(
         "__getattribute__",
     )
 
-    for position, class_target in enumerate(
-        class_targets
-    ):
-        tree = syntax_trees.get(
-            class_target.source_path
-        )
-        class_node = _find_direct_class_definition(
-            tree=tree,
-            target=class_target,
-        )
+    for position, class_target in enumerate(class_targets):
+        tree = syntax_trees.get(class_target.source_path)
+        class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
         if tree is None or class_node is None:
             return False
 
         for name in special_names:
-            if _class_binding_sites(
-                tree=tree,
-                class_node=class_node,
-                name=name,
-            ):
+            if _class_binding_sites(tree=tree, class_node=class_node, name=name):
                 return False
 
             if _named_receiver_attribute_mutation_exists(
@@ -1877,9 +1491,7 @@ def _class_targets_allow_inherited_instance_method_proof(
         if position == len(class_targets) - 1:
             continue
 
-        base_binding_name = direct_plain_base_name(
-            class_node
-        )
+        base_binding_name = direct_plain_base_name(class_node)
 
         if base_binding_name is None:
             return False
@@ -1898,27 +1510,13 @@ def _class_targets_allow_inherited_instance_method_proof(
 def _confirmed_module_attribute_target(
     *,
     root: symtable.SymbolTable | None,
-    syntax_trees: dict[
-        str,
-        ast.Module,
-    ],
+    syntax_trees: dict[str, ast.Module],
     call_scope: str | None,
     call_line: int,
     receiver_name: str,
-    candidates: tuple[
-        CallTarget,
-        ...,
-    ],
-    bindings: Sequence[
-        tuple[
-            ImportResolution,
-            CallTarget,
-        ]
-    ],
-) -> tuple[
-    CallTarget | None,
-    CallResolutionProof | None,
-]:
+    candidates: tuple[CallTarget, ...],
+    bindings: Sequence[tuple[ImportResolution, CallTarget]],
+) -> tuple[CallTarget | None, CallResolutionProof | None]:
     if len(candidates) != 1:
         return None, None
 
@@ -1937,17 +1535,11 @@ def _confirmed_module_attribute_target(
     binding_scope = resolution.evidence.scope
 
     if (
-        binding_scope == call_scope
-        and resolution.evidence.line
-        >= call_line
+        binding_scope == call_scope and resolution.evidence.line >= call_line
     ):
         return None, None
 
-    symbol = _binding_symbol(
-        root,
-        binding_scope,
-        receiver_name,
-    )
+    symbol = _binding_symbol(root, binding_scope, receiver_name)
 
     if (
         symbol is None
@@ -1961,9 +1553,7 @@ def _confirmed_module_attribute_target(
 
     stable_target, _ = (
         _confirmed_same_file_target(
-            tree=syntax_trees.get(
-                target.source_path
-            ),
+            tree=syntax_trees.get(target.source_path),
             target_name=(
                 target.qualified_name
             ),
@@ -1977,40 +1567,21 @@ def _confirmed_module_attribute_target(
     if stable_target is None:
         return None, None
 
-    return (
-        target,
-        (
-            CallResolutionProof
-            .INTERNAL_MODULE_ATTRIBUTE_BINDING
-        ),
-    )
+    return (target, CallResolutionProof.INTERNAL_MODULE_ATTRIBUTE_BINDING)
 
 def _resolve_module_attribute_call(
     *,
     source_path: str,
     evidence,
-    symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-    import_resolutions: Sequence[
-        ImportResolution
-    ],
-    symbol_tables: dict[
-        str,
-        symtable.SymbolTable,
-    ],
-    syntax_trees: dict[
-        str,
-        ast.Module,
-    ],
+    symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+    import_resolutions: Sequence[ImportResolution],
+    symbol_tables: dict[str, symtable.SymbolTable],
+    syntax_trees: dict[str, ast.Module],
 ) -> CallResolution | None:
     if (
         len(evidence.target_parts) != 2
         or _attribute_call_has_implicit_scope(
-            tree=syntax_trees.get(
-                source_path
-            ),
+            tree=syntax_trees.get(source_path),
             target_parts=(
                 evidence.target_parts
             ),
@@ -2019,104 +1590,50 @@ def _resolve_module_attribute_call(
     ):
         return None
 
-    receiver_name, member_name = (
-        evidence.target_parts
-    )
+    receiver_name, member_name = evidence.target_parts
 
-    candidates: list[
-        CallTarget
-    ] = []
+    candidates: list[CallTarget] = []
 
-    bindings: list[
-        tuple[
-            ImportResolution,
-            CallTarget,
-        ]
-    ] = []
+    bindings: list[tuple[ImportResolution, CallTarget]] = []
 
     for resolution in import_resolutions:
         if (
-            resolution.source_path
-            != source_path
-            or resolution.status
-            is not (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
-            )
-            or resolution.target_path
-            is None
-            or not _binding_is_visible(
-                resolution.evidence.scope,
-                evidence.scope,
-            )
-            or _module_import_bound_name(
-                resolution
-            )
-            != receiver_name
+            resolution.source_path != source_path
+            or resolution.status is not ImportResolutionStatus.RESOLVED_INTERNAL
+            or resolution.target_path is None
+            or not _binding_is_visible(resolution.evidence.scope, evidence.scope)
+            or _module_import_bound_name(resolution) != receiver_name
         ):
             continue
 
-        matching_targets = (
-            symbols.get(
-                (
-                    resolution.target_path,
-                    member_name,
-                ),
-                (),
-            )
-        )
+        matching_targets = symbols.get((resolution.target_path, member_name), ())
 
-        candidates.extend(
-            matching_targets
-        )
+        candidates.extend(matching_targets)
 
-        bindings.extend(
-            (
-                resolution,
-                target,
-            )
-            for target
-            in matching_targets
-        )
+        bindings.extend((resolution, target) for target in matching_targets)
 
-    ordered_candidates = (
-        _ordered_unique_targets(
-            candidates
-        )
-    )
+    ordered_candidates = _ordered_unique_targets(candidates)
 
     if not ordered_candidates:
         return None
 
-    scope_symbol = _scope_symbol(
-        symbol_tables.get(
-            source_path
-        ),
-        evidence.scope,
-        receiver_name,
-    )
+    scope_symbol = _scope_symbol(symbol_tables.get(source_path), evidence.scope, receiver_name)
 
-    shadowed_by = _shadow_reason(
-        scope_symbol,
-        has_internal_import_candidate=True,
-    )
+    shadowed_by = _shadow_reason(scope_symbol, has_internal_import_candidate=True)
 
     if shadowed_by is not None:
         return CallResolution(
             source_path=source_path,
             evidence=evidence,
             status=(
-                CallResolutionStatus
-                .SHADOWED
+                CallResolutionStatus.SHADOWED
             ),
             shadowed_by=shadowed_by,
         )
 
     caller_attribute_mutated = (
         _named_receiver_attribute_mutation_exists(
-            tree=syntax_trees.get(
-                source_path
-            ),
+            tree=syntax_trees.get(source_path),
             receiver_name=receiver_name,
             member_name=member_name,
         )
@@ -2128,9 +1645,7 @@ def _resolve_module_attribute_call(
     else:
         resolved_target, proof = (
             _confirmed_module_attribute_target(
-                root=symbol_tables.get(
-                    source_path
-                ),
+                root=symbol_tables.get(source_path),
                 syntax_trees=syntax_trees,
                 call_scope=evidence.scope,
                 call_line=evidence.line,
@@ -2141,22 +1656,13 @@ def _resolve_module_attribute_call(
         )
 
     if resolved_target is not None:
-        status = (
-            CallResolutionStatus
-            .RESOLVED_INTERNAL
-        )
+        status = CallResolutionStatus.RESOLVED_INTERNAL
 
     elif len(ordered_candidates) == 1:
-        status = (
-            CallResolutionStatus
-            .POTENTIAL_INTERNAL
-        )
+        status = CallResolutionStatus.POTENTIAL_INTERNAL
 
     else:
-        status = (
-            CallResolutionStatus
-            .AMBIGUOUS
-        )
+        status = CallResolutionStatus.AMBIGUOUS
 
     return CallResolution(
         source_path=source_path,
@@ -2173,32 +1679,16 @@ def _resolve_class_attribute_call(
     *,
     source_path: str,
     evidence,
-    top_level_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-    qualified_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-    import_resolutions: Sequence[
-        ImportResolution
-    ],
-    symbol_tables: dict[
-        str,
-        symtable.SymbolTable,
-    ],
-    syntax_trees: dict[
-        str,
-        ast.Module,
-    ],
+    top_level_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+    qualified_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+    import_resolutions: Sequence[ImportResolution],
+    symbol_tables: dict[str, symtable.SymbolTable],
+    syntax_trees: dict[str, ast.Module],
 ) -> CallResolution | None:
     if (
         len(evidence.target_parts) != 2
         or _attribute_call_has_implicit_scope(
-            tree=syntax_trees.get(
-                source_path
-            ),
+            tree=syntax_trees.get(source_path),
             target_parts=(
                 evidence.target_parts
             ),
@@ -2207,141 +1697,71 @@ def _resolve_class_attribute_call(
     ):
         return None
 
-    receiver_name, member_name = (
-        evidence.target_parts
-    )
+    receiver_name, member_name = evidence.target_parts
 
     same_file_classes = tuple(
         target
-        for target in top_level_symbols.get(
-            (
-                source_path,
-                receiver_name,
-            ),
-            (),
-        )
+        for target in top_level_symbols.get((source_path, receiver_name), ())
         if target.kind is SymbolKind.CLASS
     )
 
-    imported_classes: list[
-        CallTarget
-    ] = []
+    imported_classes: list[CallTarget] = []
 
-    imported_bindings: list[
-        tuple[
-            ImportResolution,
-            CallTarget,
-        ]
-    ] = []
+    imported_bindings: list[tuple[ImportResolution, CallTarget]] = []
 
     for resolution in import_resolutions:
         if (
-            resolution.source_path
-            != source_path
-            or resolution.status
-            is not (
-                ImportResolutionStatus
-                .RESOLVED_INTERNAL
-            )
-            or resolution.target_path
-            is None
-            or not _binding_is_visible(
-                resolution.evidence.scope,
-                evidence.scope,
-            )
-            or _import_bound_name(
-                resolution
-            )
-            != receiver_name
-            or resolution.evidence.imported_name
-            is None
+            resolution.source_path != source_path
+            or resolution.status is not ImportResolutionStatus.RESOLVED_INTERNAL
+            or resolution.target_path is None
+            or not _binding_is_visible(resolution.evidence.scope, evidence.scope)
+            or _import_bound_name(resolution) != receiver_name
+            or resolution.evidence.imported_name is None
         ):
             continue
 
         matching_classes = tuple(
             target
             for target in top_level_symbols.get(
-                (
-                    resolution.target_path,
-                    (
-                        resolution
-                        .evidence
-                        .imported_name
-                    ),
-                ),
+                (resolution.target_path, resolution.evidence.imported_name),
                 (),
             )
-            if target.kind
-            is SymbolKind.CLASS
+            if target.kind is SymbolKind.CLASS
         )
 
-        imported_classes.extend(
-            matching_classes
-        )
+        imported_classes.extend(matching_classes)
 
-        imported_bindings.extend(
-            (
-                resolution,
-                target,
-            )
-            for target
-            in matching_classes
-        )
+        imported_bindings.extend((resolution, target) for target in matching_classes)
 
-    scope_symbol = _scope_symbol(
-        symbol_tables.get(
-            source_path
-        ),
-        evidence.scope,
-        receiver_name,
-    )
+    scope_symbol = _scope_symbol(symbol_tables.get(source_path), evidence.scope, receiver_name)
 
     if (
-        scope_symbol is not None
-        and scope_symbol.is_imported()
-        and imported_classes
+        scope_symbol is not None and scope_symbol.is_imported() and imported_classes
     ):
-        class_candidates = (
-            imported_classes
-        )
+        class_candidates = imported_classes
     else:
-        class_candidates = [
-            *same_file_classes,
-            *imported_classes,
-        ]
+        class_candidates = [*same_file_classes, *imported_classes]
 
-    ordered_class_candidates = (
-        _ordered_unique_targets(
-            class_candidates
-        )
-    )
+    ordered_class_candidates = _ordered_unique_targets(class_candidates)
 
     if not ordered_class_candidates:
         return None
 
-    shadowed_by = _shadow_reason(
-        scope_symbol,
-        has_internal_import_candidate=bool(
-            imported_classes
-        ),
-    )
+    shadowed_by = _shadow_reason(scope_symbol, has_internal_import_candidate=bool(imported_classes))
 
     if shadowed_by is not None:
         return CallResolution(
             source_path=source_path,
             evidence=evidence,
             status=(
-                CallResolutionStatus
-                .SHADOWED
+                CallResolutionStatus.SHADOWED
             ),
             shadowed_by=shadowed_by,
         )
 
     call_executes_immediately = (
         _attribute_call_executes_during_module_initialization(
-            tree=syntax_trees.get(
-                source_path
-            ),
+            tree=syntax_trees.get(source_path),
             target_parts=(
                 evidence.target_parts
             ),
@@ -2351,9 +1771,7 @@ def _resolve_class_attribute_call(
 
     class_target, class_proof = (
         _confirmed_import_target(
-            root=symbol_tables.get(
-                source_path
-            ),
+            root=symbol_tables.get(source_path),
             target_name=receiver_name,
             call_scope=evidence.scope,
             call_line=evidence.line,
@@ -2372,9 +1790,7 @@ def _resolve_class_attribute_call(
     if class_target is None:
         class_target, class_proof = (
             _confirmed_same_file_target(
-                tree=syntax_trees.get(
-                    source_path
-                ),
+                tree=syntax_trees.get(source_path),
                 target_name=receiver_name,
                 call_line=evidence.line,
                 call_executes_during_module_initialization=(
@@ -2391,16 +1807,11 @@ def _resolve_class_attribute_call(
 
     if (
         class_target is not None
-        and class_proof
-        is (
-            CallResolutionProof
-            .SAME_FILE_STABLE_BINDING
-        )
+        and class_proof is CallResolutionProof.SAME_FILE_STABLE_BINDING
         and call_executes_immediately
         and evidence.scope is not None
         and (
-            evidence.scope
-            == class_target.qualified_name
+            evidence.scope == class_target.qualified_name
             or evidence.scope.startswith(
                 f"{class_target.qualified_name}."
             )
@@ -2411,9 +1822,7 @@ def _resolve_class_attribute_call(
 
     caller_attribute_mutated = (
         _named_receiver_attribute_mutation_exists(
-            tree=syntax_trees.get(
-                source_path
-            ),
+            tree=syntax_trees.get(source_path),
             receiver_name=receiver_name,
             member_name=member_name,
         )
@@ -2421,16 +1830,10 @@ def _resolve_class_attribute_call(
 
     if (
         class_target is not None
-        and class_proof
-        is (
-            CallResolutionProof
-            .SAME_FILE_STABLE_BINDING
-        )
+        and class_proof is CallResolutionProof.SAME_FILE_STABLE_BINDING
         and not caller_attribute_mutated
     ):
-        target_tree = syntax_trees.get(
-            class_target.source_path
-        )
+        target_tree = syntax_trees.get(class_target.source_path)
 
         inherited_target = (
             _confirmed_direct_inherited_member_target(
@@ -2456,29 +1859,20 @@ def _resolve_class_attribute_call(
         )
 
         if inherited_target is not None:
-            (
-                _,
-                member_target,
-                inherited_proof,
-            ) = inherited_target
+            _, member_target, inherited_proof = inherited_target
 
             return CallResolution(
                 source_path=source_path,
                 evidence=evidence,
                 status=(
-                    CallResolutionStatus
-                    .RESOLVED_INTERNAL
+                    CallResolutionStatus.RESOLVED_INTERNAL
                 ),
-                candidate_targets=(
-                    member_target,
-                ),
+                candidate_targets=(member_target,),
                 resolved_target=member_target,
                 proof=inherited_proof,
             )
 
-    member_candidates: list[
-        CallTarget
-    ] = []
+    member_candidates: list[CallTarget] = []
 
     for candidate_class in (
         ordered_class_candidates
@@ -2496,11 +1890,7 @@ def _resolve_class_attribute_call(
             )
         )
 
-    ordered_member_candidates = (
-        _ordered_unique_targets(
-            member_candidates
-        )
-    )
+    ordered_member_candidates = _ordered_unique_targets(member_candidates)
 
     if not ordered_member_candidates:
         return None
@@ -2511,29 +1901,20 @@ def _resolve_class_attribute_call(
     if (
         class_target is not None
         and not caller_attribute_mutated
-        and len(
-            ordered_member_candidates
-        ) == 1
+        and len(ordered_member_candidates) == 1
     ):
-        target_tree = syntax_trees.get(
-            class_target.source_path
-        )
+        target_tree = syntax_trees.get(class_target.source_path)
 
         stable_class_target, _ = (
             _confirmed_same_file_target(
                 tree=target_tree,
                 target_name=(
-                    class_target
-                    .qualified_name
+                    class_target.qualified_name
                 ),
                 call_line=0,
                 call_executes_during_module_initialization=False,
-                ordered_candidates=(
-                    class_target,
-                ),
-                same_file_candidates=(
-                    class_target,
-                ),
+                ordered_candidates=(class_target,),
+                same_file_candidates=(class_target,),
             )
         )
 
@@ -2551,13 +1932,8 @@ def _resolve_class_attribute_call(
 
         if (
             confirmed_member_target is None
-            and class_proof
-            is (
-                CallResolutionProof
-                .SAME_FILE_STABLE_BINDING
-            )
-            and class_target.source_path
-            == source_path
+            and class_proof is CallResolutionProof.SAME_FILE_STABLE_BINDING
+            and class_target.source_path == source_path
         ):
             subclass_member = (
                 _confirmed_same_file_subclass_member_target(
@@ -2571,73 +1947,40 @@ def _resolve_class_attribute_call(
             )
 
             if subclass_member is not None:
-                _, confirmed_member_target = (
-                    subclass_member
-                )
+                _, confirmed_member_target = subclass_member
 
         if (
-            stable_class_target
-            is not None
-            and member_target.source_path
-            == class_target.source_path
+            stable_class_target is not None
+            and member_target.source_path == class_target.source_path
             and member_target.qualified_name
             == (
                 f"{class_target.qualified_name}"
                 f".{member_name}"
             )
-            and confirmed_member_target
-            is not None
+            and confirmed_member_target is not None
         ):
-            resolved_target = (
-                member_target
-            )
+            resolved_target = member_target
 
             if (
-                class_proof
-                is (
-                    CallResolutionProof
-                    .SAME_FILE_STABLE_BINDING
-                )
+                class_proof is CallResolutionProof.SAME_FILE_STABLE_BINDING
             ):
-                proof = (
-                    CallResolutionProof
-                    .SAME_FILE_CLASS_ATTRIBUTE_BINDING
-                )
+                proof = CallResolutionProof.SAME_FILE_CLASS_ATTRIBUTE_BINDING
 
             elif (
-                class_proof
-                is (
-                    CallResolutionProof
-                    .INTERNAL_IMPORT_BINDING
-                )
+                class_proof is CallResolutionProof.INTERNAL_IMPORT_BINDING
             ):
-                proof = (
-                    CallResolutionProof
-                    .INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING
-                )
+                proof = CallResolutionProof.INTERNAL_IMPORTED_CLASS_ATTRIBUTE_BINDING
 
     if (
-        resolved_target is not None
-        and proof is not None
+        resolved_target is not None and proof is not None
     ):
-        status = (
-            CallResolutionStatus
-            .RESOLVED_INTERNAL
-        )
+        status = CallResolutionStatus.RESOLVED_INTERNAL
 
-    elif len(
-        ordered_member_candidates
-    ) == 1:
-        status = (
-            CallResolutionStatus
-            .POTENTIAL_INTERNAL
-        )
+    elif len(ordered_member_candidates) == 1:
+        status = CallResolutionStatus.POTENTIAL_INTERNAL
 
     else:
-        status = (
-            CallResolutionStatus
-            .AMBIGUOUS
-        )
+        status = CallResolutionStatus.AMBIGUOUS
 
     return CallResolution(
         source_path=source_path,
@@ -2656,8 +1999,7 @@ def _direct_function_scope_node(
     scope: str | None,
 ) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
     if (
-        tree is None
-        or scope is None
+        tree is None or scope is None
     ):
         return None
 
@@ -2672,20 +2014,13 @@ def _direct_function_scope_node(
         function_name = scope_parts[0]
 
     elif len(scope_parts) == 2:
-        class_name, function_name = (
-            scope_parts
-        )
+        class_name, function_name = scope_parts
 
         class_matches = tuple(
             node
             for node in tree.body
             if (
-                isinstance(
-                    node,
-                    ast.ClassDef,
-                )
-                and node.name
-                == class_name
+                isinstance(node, ast.ClassDef) and node.name == class_name
             )
         )
 
@@ -2703,15 +2038,7 @@ def _direct_function_scope_node(
         node
         for node in container
         if (
-            isinstance(
-                node,
-                (
-                    ast.FunctionDef,
-                    ast.AsyncFunctionDef,
-                ),
-            )
-            and node.name
-            == function_name
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == function_name
         )
     )
 
@@ -2729,48 +2056,26 @@ def _matching_attribute_call_node(
 ) -> ast.Call | None:
     matches: list[ast.Call] = []
 
-    for node in ast.walk(
-        tree
-    ):
+    for node in ast.walk(tree):
         if (
-            not isinstance(
-                node,
-                ast.Call,
-            )
-            or node.lineno != call_line
+            not isinstance(node, ast.Call) or node.lineno != call_line
         ):
             continue
 
         parts: list[str] = []
         current: ast.AST = node.func
 
-        while isinstance(
-            current,
-            ast.Attribute,
-        ):
-            parts.append(
-                current.attr
-            )
+        while isinstance(current, ast.Attribute):
+            parts.append(current.attr)
             current = current.value
 
-        if not isinstance(
-            current,
-            ast.Name,
-        ):
+        if not isinstance(current, ast.Name):
             continue
 
-        parts.append(
-            current.id
-        )
+        parts.append(current.id)
 
-        if tuple(
-            reversed(
-                parts
-            )
-        ) == target_parts:
-            matches.append(
-                node
-            )
+        if tuple(reversed(parts)) == target_parts:
+            matches.append(node)
 
     if len(matches) != 1:
         return None
@@ -2782,29 +2087,16 @@ def _direct_function_statement(
     *,
     node: ast.AST,
     function_node: (
-        ast.FunctionDef
-        | ast.AsyncFunctionDef
+        ast.FunctionDef | ast.AsyncFunctionDef
     ),
-    parent_by_child: dict[
-        ast.AST,
-        ast.AST,
-    ],
+    parent_by_child: dict[ast.AST, ast.AST],
 ) -> ast.stmt | None:
     child = node
-    parent = parent_by_child.get(
-        node
-    )
+    parent = parent_by_child.get(node)
 
     while parent is not None:
         if parent is function_node:
-            return (
-                child
-                if isinstance(
-                    child,
-                    ast.stmt,
-                )
-                else None
-            )
+            return child if isinstance(child, ast.stmt) else None
 
         if isinstance(
             parent,
@@ -2822,9 +2114,7 @@ def _direct_function_statement(
             return None
 
         child = parent
-        parent = parent_by_child.get(
-            parent
-        )
+        parent = parent_by_child.get(parent)
 
     return None
 
@@ -2834,28 +2124,16 @@ def _statement_is_direct_call(
     statement: ast.stmt,
     call: ast.Call,
 ) -> bool:
-    if isinstance(
-        statement,
-        ast.Expr,
-    ):
+    if isinstance(statement, ast.Expr):
         return statement.value is call
 
-    if isinstance(
-        statement,
-        ast.Return,
-    ):
+    if isinstance(statement, ast.Return):
         return statement.value is call
 
-    if isinstance(
-        statement,
-        ast.Assign,
-    ):
+    if isinstance(statement, ast.Assign):
         return statement.value is call
 
-    if isinstance(
-        statement,
-        ast.AnnAssign,
-    ):
+    if isinstance(statement, ast.AnnAssign):
         return statement.value is call
 
     return False
@@ -2866,37 +2144,15 @@ def _passive_local_instance_gap_expression(
     *,
     receiver_name: str,
 ) -> bool:
-    if isinstance(
-        node,
-        ast.Constant,
-    ):
+    if isinstance(node, ast.Constant):
         return True
 
-    if isinstance(
-        node,
-        ast.Name,
-    ):
-        return (
-            isinstance(
-                node.ctx,
-                ast.Load,
-            )
-            and node.id
-            != receiver_name
-        )
+    if isinstance(node, ast.Name):
+        return isinstance(node.ctx, ast.Load) and node.id != receiver_name
 
-    if isinstance(
-        node,
-        (
-            ast.Tuple,
-            ast.List,
-        ),
-    ):
+    if isinstance(node, (ast.Tuple, ast.List)):
         return all(
-            _passive_local_instance_gap_expression(
-                element,
-                receiver_name=receiver_name,
-            )
+            _passive_local_instance_gap_expression(element, receiver_name=receiver_name)
             for element in node.elts
         )
 
@@ -2908,100 +2164,57 @@ def _passive_local_instance_gap_statement(
     *,
     receiver_name: str,
 ) -> bool:
-    if isinstance(
-        statement,
-        ast.Pass,
-    ):
+    if isinstance(statement, ast.Pass):
         return True
 
     if (
-        isinstance(
-            statement,
-            ast.Expr,
-        )
-        and isinstance(
-            statement.value,
-            ast.Constant,
-        )
+        isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Constant)
     ):
         return True
 
-    if not isinstance(
-        statement,
-        ast.Assign,
-    ):
+    if not isinstance(statement, ast.Assign):
         return False
 
     if not statement.targets:
         return False
 
     if not all(
-        isinstance(
-            target,
-            ast.Name,
-        )
-        and target.id
-        != receiver_name
+        isinstance(target, ast.Name) and target.id != receiver_name
         for target in statement.targets
     ):
         return False
 
-    return (
-        _passive_local_instance_gap_expression(
-            statement.value,
-            receiver_name=receiver_name,
-        )
-    )
+    return _passive_local_instance_gap_expression(statement.value, receiver_name=receiver_name)
 
 
 def _stable_local_constructor_assignment(
     *,
     function_node: (
-        ast.FunctionDef
-        | ast.AsyncFunctionDef
+        ast.FunctionDef | ast.AsyncFunctionDef
     ),
     method_index: int,
     receiver_name: str,
     call_line: int,
 ) -> ast.Assign | None:
-    for statement in reversed(
-        function_node.body[
-            :method_index
-        ]
-    ):
+    for statement in reversed(function_node.body[:method_index]):
         if (
-            isinstance(
-                statement,
-                ast.Assign,
-            )
-            and len(
-                statement.targets
-            ) == 1
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
             and isinstance(
                 statement.targets[0],
                 ast.Name,
             )
             and statement.targets[0].id
             == receiver_name
-            and isinstance(
-                statement.value,
-                ast.Call,
-            )
-            and isinstance(
-                statement.value.func,
-                ast.Name,
-            )
+            and isinstance(statement.value, ast.Call)
+            and isinstance(statement.value.func, ast.Name)
             and not statement.value.args
             and not statement.value.keywords
-            and statement.lineno
-            < call_line
+            and statement.lineno < call_line
         ):
             return statement
 
-        if not _passive_local_instance_gap_statement(
-            statement,
-            receiver_name=receiver_name,
-        ):
+        if not _passive_local_instance_gap_statement(statement, receiver_name=receiver_name):
             return None
 
     return None
@@ -3012,18 +2225,10 @@ def _class_allows_direct_instance_method_proof(
     tree: ast.Module | None,
     class_target: CallTarget,
 ) -> bool:
-    class_node = (
-        _find_direct_class_definition(
-            tree=tree,
-            target=class_target,
-        )
-    )
+    class_node = _find_direct_class_definition(tree=tree, target=class_target)
 
     if (
-        tree is None
-        or class_node is None
-        or class_node.bases
-        or class_node.keywords
+        tree is None or class_node is None or class_node.bases or class_node.keywords
     ):
         return False
 
@@ -3032,11 +2237,7 @@ def _class_allows_direct_instance_method_proof(
         "__init__",
         "__getattribute__",
     ):
-        if _class_binding_sites(
-            tree=tree,
-            class_node=class_node,
-            name=name,
-        ):
+        if _class_binding_sites(tree=tree, class_node=class_node, name=name):
             return False
 
     return True
@@ -3046,28 +2247,12 @@ def _resolve_local_instance_attribute_call(
     *,
     source_path: str,
     evidence,
-    top_level_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-    qualified_symbols: dict[
-        tuple[str, str],
-        tuple[CallTarget, ...],
-    ],
-    prior_resolutions: Sequence[
-        CallResolution
-    ],
-    import_resolutions: Sequence[
-        ImportResolution
-    ],
-    symbol_tables: dict[
-        str,
-        symtable.SymbolTable,
-    ],
-    syntax_trees: dict[
-        str,
-        ast.Module,
-    ],
+    top_level_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+    qualified_symbols: dict[tuple[str, str], tuple[CallTarget, ...]],
+    prior_resolutions: Sequence[CallResolution],
+    import_resolutions: Sequence[ImportResolution],
+    symbol_tables: dict[str, symtable.SymbolTable],
+    syntax_trees: dict[str, ast.Module],
 ) -> CallResolution | None:
     if (
         len(evidence.target_parts) != 2
@@ -3075,9 +2260,7 @@ def _resolve_local_instance_attribute_call(
     ):
         return None
 
-    tree = syntax_trees.get(
-        source_path
-    )
+    tree = syntax_trees.get(source_path)
 
     if tree is None:
         return None
@@ -3089,12 +2272,7 @@ def _resolve_local_instance_attribute_call(
     ):
         return None
 
-    function_node = (
-        _direct_function_scope_node(
-            tree=tree,
-            scope=evidence.scope,
-        )
-    )
+    function_node = _direct_function_scope_node(tree=tree, scope=evidence.scope)
 
     method_call = (
         _matching_attribute_call_node(
@@ -3105,16 +2283,11 @@ def _resolve_local_instance_attribute_call(
     )
 
     if (
-        function_node is None
-        or method_call is None
+        function_node is None or method_call is None
     ):
         return None
 
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
+    parent_by_child = _ast_parent_map(tree)
 
     method_statement = (
         _direct_function_statement(
@@ -3126,10 +2299,7 @@ def _resolve_local_instance_attribute_call(
 
     if (
         method_statement is None
-        or not _statement_is_direct_call(
-            statement=method_statement,
-            call=method_call,
-        )
+        or not _statement_is_direct_call(statement=method_statement, call=method_call)
     ):
         return None
 
@@ -3137,9 +2307,7 @@ def _resolve_local_instance_attribute_call(
         (
             position
             for position, statement
-            in enumerate(
-                function_node.body
-            )
+            in enumerate(function_node.body)
             if statement is method_statement
         ),
         None,
@@ -3151,9 +2319,7 @@ def _resolve_local_instance_attribute_call(
     ):
         return None
 
-    receiver_name, member_name = (
-        evidence.target_parts
-    )
+    receiver_name, member_name = evidence.target_parts
 
     assignment = (
         _stable_local_constructor_assignment(
@@ -3167,13 +2333,7 @@ def _resolve_local_instance_attribute_call(
     if assignment is None:
         return None
 
-    receiver_symbol = _scope_symbol(
-        symbol_tables.get(
-            source_path
-        ),
-        evidence.scope,
-        receiver_name,
-    )
+    receiver_symbol = _scope_symbol(symbol_tables.get(source_path), evidence.scope, receiver_name)
 
     if (
         receiver_symbol is None
@@ -3187,36 +2347,24 @@ def _resolve_local_instance_attribute_call(
     ):
         return None
 
-    constructor_name = (
-        assignment.value.func.id
-    )
+    constructor_name = assignment.value.func.id
 
     constructor_resolutions = tuple(
         resolution
         for resolution in prior_resolutions
         if (
-            resolution.source_path
-            == source_path
-            and resolution.evidence.scope
-            == evidence.scope
-            and resolution.evidence.line
-            == assignment.value.lineno
-            and resolution.evidence.target_kind
-            is CallTargetKind.NAME
-            and resolution.evidence.target_parts
-            == (constructor_name,)
-            and resolution.status
-            is CallResolutionStatus.RESOLVED_INTERNAL
-            and resolution.resolved_target
-            is not None
-            and resolution.resolved_target.kind
-            is SymbolKind.CLASS
+            resolution.source_path == source_path
+            and resolution.evidence.scope == evidence.scope
+            and resolution.evidence.line == assignment.value.lineno
+            and resolution.evidence.target_kind is CallTargetKind.NAME
+            and resolution.evidence.target_parts == (constructor_name,)
+            and resolution.status is CallResolutionStatus.RESOLVED_INTERNAL
+            and resolution.resolved_target is not None
+            and resolution.resolved_target.kind is SymbolKind.CLASS
         )
     )
 
-    if len(
-        constructor_resolutions
-    ) != 1:
+    if len(constructor_resolutions) != 1:
         return None
 
     class_target = (
@@ -3224,9 +2372,7 @@ def _resolve_local_instance_attribute_call(
         .resolved_target
     )
 
-    target_tree = syntax_trees.get(
-        class_target.source_path
-    )
+    target_tree = syntax_trees.get(class_target.source_path)
 
     stable_class_target, _ = (
         _confirmed_same_file_target(
@@ -3236,12 +2382,8 @@ def _resolve_local_instance_attribute_call(
             ),
             call_line=0,
             call_executes_during_module_initialization=False,
-            ordered_candidates=(
-                class_target,
-            ),
-            same_file_candidates=(
-                class_target,
-            ),
+            ordered_candidates=(class_target,),
+            same_file_candidates=(class_target,),
         )
     )
 
@@ -3255,10 +2397,7 @@ def _resolve_local_instance_attribute_call(
     ):
         return None
 
-    if _class_allows_direct_instance_method_proof(
-        tree=target_tree,
-        class_target=class_target,
-    ):
+    if _class_allows_direct_instance_method_proof(tree=target_tree, class_target=class_target):
         member_candidates = (
             _ordered_unique_targets(
                 qualified_symbols.get(
@@ -3274,9 +2413,7 @@ def _resolve_local_instance_attribute_call(
             )
         )
 
-        if len(
-            member_candidates
-        ) != 1:
+        if len(member_candidates) != 1:
             return None
 
         member_target = (
@@ -3294,16 +2431,12 @@ def _resolve_local_instance_attribute_call(
             source_path=source_path,
             evidence=evidence,
             status=(
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
+                CallResolutionStatus.RESOLVED_INTERNAL
             ),
-            candidate_targets=(
-                member_target,
-            ),
+            candidate_targets=(member_target,),
             resolved_target=member_target,
             proof=(
-                CallResolutionProof
-                .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
             ),
         )
 
@@ -3352,16 +2485,12 @@ def _resolve_local_instance_attribute_call(
                 source_path=source_path,
                 evidence=evidence,
                 status=(
-                    CallResolutionStatus
-                    .RESOLVED_INTERNAL
+                    CallResolutionStatus.RESOLVED_INTERNAL
                 ),
-                candidate_targets=(
-                    member_target,
-                ),
+                candidate_targets=(member_target,),
                 resolved_target=member_target,
                 proof=(
-                    CallResolutionProof
-                    .LOCAL_INSTANCE_CONSTRUCTOR_BINDING
+                    CallResolutionProof.LOCAL_INSTANCE_CONSTRUCTOR_BINDING
                 ),
             )
 
@@ -3391,11 +2520,7 @@ def _resolve_local_instance_attribute_call(
     if inherited_target is None:
         return None
 
-    (
-        class_targets,
-        member_target,
-        _,
-    ) = inherited_target
+    class_targets, member_target, _ = inherited_target
 
     if not _class_targets_allow_inherited_instance_method_proof(
         class_targets=class_targets,
@@ -3407,54 +2532,32 @@ def _resolve_local_instance_attribute_call(
         source_path=source_path,
         evidence=evidence,
         status=(
-            CallResolutionStatus
-            .RESOLVED_INTERNAL
+            CallResolutionStatus.RESOLVED_INTERNAL
         ),
-        candidate_targets=(
-            member_target,
-        ),
+        candidate_targets=(member_target,),
         resolved_target=member_target,
         proof=(
-            CallResolutionProof
-            .LOCAL_INSTANCE_INHERITED_METHOD_BINDING
+            CallResolutionProof.LOCAL_INSTANCE_INHERITED_METHOD_BINDING
         ),
     )
 
 def _symbol_tables_by_path(
     index: SemanticProjectIndex,
-) -> dict[
-    str,
-    symtable.SymbolTable,
-]:
-    tables: dict[
-        str,
-        symtable.SymbolTable,
-    ] = {}
+) -> dict[str, symtable.SymbolTable]:
+    tables: dict[str, symtable.SymbolTable] = {}
 
     for parsed in index.parsed_sources:
         if (
-            parsed.source.language
-            is not SourceLanguage.PYTHON
+            parsed.source.language is not SourceLanguage.PYTHON
         ):
             continue
 
-        content = (
-            parsed
-            .source
-            .read_result
-            .content
-        )
+        content = parsed.source.read_result.content
 
         if content is None:
             continue
 
-        source_path = (
-            parsed
-            .source
-            .read_result
-            .scanned_file
-            .relative_path
-        )
+        source_path = parsed.source.read_result.scanned_file.relative_path
 
         try:
             tables[source_path] = (
@@ -3475,8 +2578,7 @@ def _scope_table(
     scope: str | None,
 ) -> symtable.SymbolTable | None:
     if (
-        root is None
-        or scope is None
+        root is None or scope is None
     ):
         return None
 
@@ -3486,18 +2588,11 @@ def _scope_table(
         "."
     ):
         try:
-            symbol = current.lookup(
-                part
-            )
+            symbol = current.lookup(part)
 
-            current = (
-                symbol.get_namespace()
-            )
+            current = symbol.get_namespace()
 
-        except (
-            KeyError,
-            ValueError,
-        ):
+        except (KeyError, ValueError):
             return None
 
     return current
@@ -3508,18 +2603,13 @@ def _scope_symbol(
     scope: str | None,
     name: str,
 ) -> symtable.Symbol | None:
-    table = _scope_table(
-        root,
-        scope,
-    )
+    table = _scope_table(root, scope)
 
     if table is None:
         return None
 
     try:
-        return table.lookup(
-            name
-        )
+        return table.lookup(name)
 
     except KeyError:
         return None
@@ -3535,18 +2625,13 @@ def _binding_symbol(
     if binding_scope is None:
         table = root
     else:
-        table = _scope_table(
-            root,
-            binding_scope,
-        )
+        table = _scope_table(root, binding_scope)
 
     if table is None:
         return None
 
     try:
-        return table.lookup(
-            name
-        )
+        return table.lookup(name)
 
     except KeyError:
         return None
@@ -3560,115 +2645,66 @@ def _shadow_reason(
         return None
 
     if symbol.is_parameter():
-        return (
-            CallShadowReason.PARAMETER
-        )
+        return CallShadowReason.PARAMETER
 
     if symbol.is_nonlocal():
-        return (
-            CallShadowReason.NONLOCAL
-        )
+        return CallShadowReason.NONLOCAL
 
     if symbol.is_free():
-        return (
-            CallShadowReason.FREE
-        )
+        return CallShadowReason.FREE
 
     if symbol.is_assigned():
-        return (
-            CallShadowReason.ASSIGNMENT
-        )
+        return CallShadowReason.ASSIGNMENT
 
     if symbol.is_imported():
         if has_internal_import_candidate:
             return None
 
-        return (
-            CallShadowReason.IMPORT
-        )
+        return CallShadowReason.IMPORT
 
     if symbol.is_local():
-        return (
-            CallShadowReason.LOCAL
-        )
+        return CallShadowReason.LOCAL
 
     return None
 
 def resolve_python_calls(
     index: SemanticProjectIndex,
-    import_resolutions: Sequence[
-        ImportResolution
-    ],
-) -> tuple[
-    CallResolution,
-    ...,
-]:
-    language_by_path = (
-        _language_by_path(
-            index
-        )
-    )
+    import_resolutions: Sequence[ImportResolution],
+) -> tuple[CallResolution, ...]:
+    language_by_path = _language_by_path(index)
 
-    symbols = (
-        _build_top_level_symbol_index(
-            index
-        )
-    )
+    symbols = _build_top_level_symbol_index(index)
 
-    qualified_symbols = (
-        _build_qualified_symbol_index(
-            index
-        )
-    )
+    qualified_symbols = _build_qualified_symbol_index(index)
 
-    symbol_tables = (
-        _symbol_tables_by_path(
-            index
-        )
-    )
+    symbol_tables = _symbol_tables_by_path(index)
 
-    syntax_trees = (
-        _python_syntax_trees_by_path(
-            index
-        )
-    )
+    syntax_trees = _python_syntax_trees_by_path(index)
 
-    resolutions: list[
-        CallResolution
-    ] = []
+    resolutions: list[CallResolution] = []
 
     for indexed_call in index.calls:
-        source_path = (
-            indexed_call.source_path
-        )
+        source_path = indexed_call.source_path
 
-        evidence = (
-            indexed_call.evidence
-        )
+        evidence = indexed_call.evidence
 
         if (
-            language_by_path.get(
-                source_path
-            )
-            is not SourceLanguage.PYTHON
+            language_by_path.get(source_path) is not SourceLanguage.PYTHON
         ):
             continue
 
         if (
-            evidence.target_kind
-            is CallTargetKind.DYNAMIC
+            evidence.target_kind is CallTargetKind.DYNAMIC
         ):
             resolutions.append(
                 CallResolution(
                     source_path=source_path,
                     evidence=evidence,
                     status=(
-                        CallResolutionStatus
-                        .DYNAMIC
+                        CallResolutionStatus.DYNAMIC
                     ),
                     dynamic_kind=(
-                        evidence.dynamic_kind
-                        or DynamicCallKind.OTHER
+                        evidence.dynamic_kind or DynamicCallKind.OTHER
                     ),
                 )
             )
@@ -3676,8 +2712,7 @@ def resolve_python_calls(
             continue
 
         if (
-            evidence.target_kind
-            is CallTargetKind.ATTRIBUTE
+            evidence.target_kind is CallTargetKind.ATTRIBUTE
         ):
             attribute_resolution = (
                 _resolve_module_attribute_call(
@@ -3697,9 +2732,7 @@ def resolve_python_calls(
             )
 
             if attribute_resolution is not None:
-                resolutions.append(
-                    attribute_resolution
-                )
+                resolutions.append(attribute_resolution)
 
                 continue
 
@@ -3726,12 +2759,9 @@ def resolve_python_calls(
             )
 
             if (
-                class_attribute_resolution
-                is not None
+                class_attribute_resolution is not None
             ):
-                resolutions.append(
-                    class_attribute_resolution
-                )
+                resolutions.append(class_attribute_resolution)
 
                 continue
 
@@ -3761,29 +2791,22 @@ def resolve_python_calls(
             )
 
             if (
-                instance_attribute_resolution
-                is not None
+                instance_attribute_resolution is not None
             ):
-                resolutions.append(
-                    instance_attribute_resolution
-                )
+                resolutions.append(instance_attribute_resolution)
 
                 continue
 
         if (
-            evidence.target_kind
-            is not CallTargetKind.NAME
-            or len(
-                evidence.target_parts
-            ) != 1
+            evidence.target_kind is not CallTargetKind.NAME
+            or len(evidence.target_parts) != 1
         ):
             resolutions.append(
                 CallResolution(
                     source_path=source_path,
                     evidence=evidence,
                     status=(
-                        CallResolutionStatus
-                        .UNRESOLVED
+                        CallResolutionStatus.UNRESOLVED
                     ),
                 )
             )
@@ -3794,112 +2817,50 @@ def resolve_python_calls(
             evidence.target_parts[0]
         )
 
-        same_file_candidates: list[
-            CallTarget
-        ] = list(
-            symbols.get(
-                (
-                    source_path,
-                    target_name,
-                ),
-                (),
-            )
-        )
+        same_file_candidates: list[CallTarget] = list(symbols.get((source_path, target_name), ()))
 
-        imported_candidates: list[
-            CallTarget
-        ] = []
+        imported_candidates: list[CallTarget] = []
 
-        imported_bindings: list[
-            tuple[
-                ImportResolution,
-                CallTarget,
-            ]
-        ] = []
+        imported_bindings: list[tuple[ImportResolution, CallTarget]] = []
 
         for import_resolution in (
             import_resolutions
         ):
             if (
-                import_resolution.source_path
-                != source_path
+                import_resolution.source_path != source_path
             ):
                 continue
 
             if (
-                import_resolution.status
-                is not (
-                    ImportResolutionStatus
-                    .RESOLVED_INTERNAL
-                )
+                import_resolution.status is not ImportResolutionStatus.RESOLVED_INTERNAL
             ):
                 continue
 
             if (
-                import_resolution.target_path
-                is None
+                import_resolution.target_path is None
             ):
                 continue
 
-            if not _binding_is_visible(
-                import_resolution
-                .evidence
-                .scope,
-                evidence.scope,
-            ):
+            if not _binding_is_visible(import_resolution.evidence.scope, evidence.scope):
                 continue
 
-            bound_name = (
-                _import_bound_name(
-                    import_resolution
-                )
-            )
+            bound_name = _import_bound_name(import_resolution)
 
             if bound_name != target_name:
                 continue
 
-            imported_name = (
-                import_resolution
-                .evidence
-                .imported_name
-            )
+            imported_name = import_resolution.evidence.imported_name
 
             if imported_name is None:
                 continue
 
-            matching_targets = (
-                symbols.get(
-                    (
-                        import_resolution
-                        .target_path,
-                        imported_name,
-                    ),
-                    (),
-                )
-            )
+            matching_targets = symbols.get((import_resolution.target_path, imported_name), ())
 
-            imported_candidates.extend(
-                matching_targets
-            )
+            imported_candidates.extend(matching_targets)
 
-            imported_bindings.extend(
-                (
-                    import_resolution,
-                    target,
-                )
-                for target
-                in matching_targets
-            )
+            imported_bindings.extend((import_resolution, target) for target in matching_targets)
 
-        scope_symbol = (
-            _scope_symbol(
-                symbol_tables.get(
-                    source_path
-                ),
-                evidence.scope,
-                target_name,
-            )
-        )
+        scope_symbol = _scope_symbol(symbol_tables.get(source_path), evidence.scope, target_name)
 
         if (
             scope_symbol is not None
@@ -3912,12 +2873,10 @@ def resolve_python_calls(
                     source_path=source_path,
                     evidence=evidence,
                     status=(
-                        CallResolutionStatus
-                        .DYNAMIC
+                        CallResolutionStatus.DYNAMIC
                     ),
                     dynamic_kind=(
-                        DynamicCallKind
-                        .CALLBACK_PARAMETER
+                        DynamicCallKind.CALLBACK_PARAMETER
                     ),
                 )
             )
@@ -3925,12 +2884,7 @@ def resolve_python_calls(
             continue
 
         shadowed_by = (
-            _shadow_reason(
-                scope_symbol,
-                has_internal_import_candidate=bool(
-                    imported_candidates
-                ),
-            )
+            _shadow_reason(scope_symbol, has_internal_import_candidate=bool(imported_candidates))
         )
 
         if shadowed_by is not None:
@@ -3939,8 +2893,7 @@ def resolve_python_calls(
                     source_path=source_path,
                     evidence=evidence,
                     status=(
-                        CallResolutionStatus
-                        .SHADOWED
+                        CallResolutionStatus.SHADOWED
                     ),
                     candidate_targets=(),
                     shadowed_by=shadowed_by,
@@ -3950,31 +2903,18 @@ def resolve_python_calls(
             continue
 
         if (
-            scope_symbol is not None
-            and scope_symbol.is_imported()
-            and imported_candidates
+            scope_symbol is not None and scope_symbol.is_imported() and imported_candidates
         ):
-            candidates = (
-                imported_candidates
-            )
+            candidates = imported_candidates
 
         else:
-            candidates = [
-                *same_file_candidates,
-                *imported_candidates,
-            ]
+            candidates = [*same_file_candidates, *imported_candidates]
 
-        ordered_candidates = (
-            _ordered_unique_targets(
-                candidates
-            )
-        )
+        ordered_candidates = _ordered_unique_targets(candidates)
 
         call_executes_during_module_initialization = (
             _call_executes_during_module_initialization(
-                tree=syntax_trees.get(
-                    source_path
-                ),
+                tree=syntax_trees.get(source_path),
                 target_name=target_name,
                 call_line=evidence.line,
             )
@@ -3982,9 +2922,7 @@ def resolve_python_calls(
 
         unmodeled_scope_shadow = (
             _call_has_unmodeled_scope_shadow(
-                tree=syntax_trees.get(
-                    source_path
-                ),
+                tree=syntax_trees.get(source_path),
                 target_name=target_name,
                 call_line=evidence.line,
             )
@@ -3998,9 +2936,7 @@ def resolve_python_calls(
             resolved_target, proof = (
                 _confirmed_import_target(
                     root=(
-                        symbol_tables.get(
-                            source_path
-                        )
+                        symbol_tables.get(source_path)
                     ),
                     target_name=target_name,
                     call_scope=evidence.scope,
@@ -4020,9 +2956,7 @@ def resolve_python_calls(
             if resolved_target is None:
                 resolved_target, proof = (
                     _confirmed_same_file_target(
-                        tree=syntax_trees.get(
-                            source_path
-                        ),
+                        tree=syntax_trees.get(source_path),
                         target_name=target_name,
                         call_line=evidence.line,
                         call_executes_during_module_initialization=(
@@ -4038,30 +2972,16 @@ def resolve_python_calls(
                 )
 
         if resolved_target is not None:
-            status = (
-                CallResolutionStatus
-                .RESOLVED_INTERNAL
-            )
+            status = CallResolutionStatus.RESOLVED_INTERNAL
 
         elif not ordered_candidates:
-            status = (
-                CallResolutionStatus
-                .UNRESOLVED
-            )
+            status = CallResolutionStatus.UNRESOLVED
 
-        elif len(
-            ordered_candidates
-        ) == 1:
-            status = (
-                CallResolutionStatus
-                .POTENTIAL_INTERNAL
-            )
+        elif len(ordered_candidates) == 1:
+            status = CallResolutionStatus.POTENTIAL_INTERNAL
 
         else:
-            status = (
-                CallResolutionStatus
-                .AMBIGUOUS
-            )
+            status = CallResolutionStatus.AMBIGUOUS
 
         resolutions.append(
             CallResolution(
@@ -4076,6 +2996,4 @@ def resolve_python_calls(
             )
         )
 
-    return tuple(
-        resolutions
-    )
+    return tuple(resolutions)

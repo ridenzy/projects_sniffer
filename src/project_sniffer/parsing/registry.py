@@ -30,10 +30,7 @@ PARSER_DEFINITIONS = (
 )
 
 
-_DEFINITION_BY_LANGUAGE = {
-    definition.language: definition
-    for definition in PARSER_DEFINITIONS
-}
+_DEFINITION_BY_LANGUAGE = {definition.language: definition for definition in PARSER_DEFINITIONS}
 
 
 def get_parser_definition(language: SourceLanguage) -> ParserDefinition | None:

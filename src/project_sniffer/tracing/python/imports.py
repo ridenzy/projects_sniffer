@@ -114,10 +114,7 @@ def _build_module_index(
         for alias in _module_aliases(source_path):
             paths_by_module[alias].add(source_path)
 
-    return {
-        module: tuple(sorted(paths))
-        for module, paths in paths_by_module.items()
-    }
+    return {module: tuple(sorted(paths)) for module, paths in paths_by_module.items()}
 
 
 def resolve_python_imports(
@@ -136,9 +133,7 @@ def resolve_python_imports(
         if language_by_path.get(source_path) is not SourceLanguage.PYTHON:
             continue
 
-        requested_modules, invalid = _requested_modules(
-            source_path, indexed_import.evidence
-        )
+        requested_modules, invalid = _requested_modules(source_path, indexed_import.evidence)
 
         if invalid:
             resolutions.append(

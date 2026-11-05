@@ -33,9 +33,7 @@ class DocumentationReportsSummary:
 
     @property
     def generated_reports(self) -> int:
-        return sum(
-            item.report_summary is not None for item in (self.public, self.private)
-        )
+        return sum(item.report_summary is not None for item in (self.public, self.private))
 
 
 def _assert_scope_path_safe(*, project_root: Path, scope_name: str) -> Path:
@@ -96,9 +94,7 @@ def _build_scope_report(
     confirm_private_ignore_override: (Callable[[], bool] | None) = None,
 ) -> DocumentationScopeSummary:
     source_label = f"docs/{scope_name}"
-    scope_path = _assert_scope_path_safe(
-        project_root=project_root, scope_name=scope_name
-    )
+    scope_path = _assert_scope_path_safe(project_root=project_root, scope_name=scope_name)
 
     if not scope_path.exists():
         return DocumentationScopeSummary(

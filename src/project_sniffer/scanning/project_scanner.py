@@ -74,18 +74,10 @@ def scan_project(
     directories: list[str] = []
     scanned_files: list[ScannedFile] = []
 
-    for root, dirs, files in os.walk(
-        project_path,
-        topdown=True,
-        followlinks=False,
-    ):
+    for root, dirs, files in os.walk(project_path, topdown=True, followlinks=False):
         current_root = Path(root)
 
-        relative_root_path = (
-            current_root.relative_to(
-                project_path
-            )
-        )
+        relative_root_path = current_root.relative_to(project_path)
 
         relative_root = (
             ""
@@ -104,89 +96,47 @@ def scan_project(
         for directory_name in sorted(dirs):
             candidate = current_root / directory_name
 
-            relative_directory = (
-                candidate.relative_to(
-                    project_path
-                )
-                .as_posix()
-            )
+            relative_directory = candidate.relative_to(project_path).as_posix()
 
             policy_relative_directory = (
-                _policy_relative_path(
-                    relative_directory,
-                    ignore_path_prefix,
-                )
+                _policy_relative_path(relative_directory, ignore_path_prefix)
             )
 
-            if matcher.matches_folder(
-                directory_name,
-                policy_relative_directory,
-            ):
+            if matcher.matches_folder(directory_name, policy_relative_directory):
                 continue
 
-            if _is_excluded_directory(
-                candidate,
-                excluded,
-            ):
+            if _is_excluded_directory(candidate, excluded):
                 continue
 
             if (
-                apply_gitignore
-                and gitignore_matcher.matches_directory(
-                    relative_directory
-                )
+                apply_gitignore and gitignore_matcher.matches_directory(relative_directory)
             ):
                 continue
 
-            kept_directories.append(
-                directory_name
-            )
+            kept_directories.append(directory_name)
 
         dirs[:] = kept_directories
 
         if relative_root:
-            directories.append(
-                relative_root
-            )
+            directories.append(relative_root)
 
-        for filename in sorted(
-            files
-        ):
+        for filename in sorted(files):
             absolute_path = current_root / filename
 
-            relative_path = (
-                absolute_path.relative_to(
-                    project_path
-                )
-                .as_posix()
-            )
+            relative_path = absolute_path.relative_to(project_path).as_posix()
 
-            policy_relative_path = (
-                _policy_relative_path(
-                    relative_path,
-                    ignore_path_prefix,
-                )
-            )
+            policy_relative_path = _policy_relative_path(relative_path, ignore_path_prefix)
 
-            if matcher.matches_file(
-                filename,
-                policy_relative_path,
-            ):
+            if matcher.matches_file(filename, policy_relative_path):
                 continue
 
             if (
-                apply_gitignore
-                and gitignore_matcher.matches_file(
-                    relative_path
-                )
+                apply_gitignore and gitignore_matcher.matches_file(relative_path)
             ):
                 continue
 
             scanned_files.append(
-                ScannedFile(
-                    absolute_path=absolute_path,
-                    relative_path=relative_path,
-                )
+                ScannedFile(absolute_path=absolute_path, relative_path=relative_path)
             )
 
     return ScanManifest(
