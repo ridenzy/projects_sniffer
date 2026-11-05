@@ -68,10 +68,7 @@ class SemanticProjectIndexTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=result,
-            language=language,
-        )
+        return SourceEvidence(read_result=result, language=language)
 
     def test_index_flattens_parsed_imports_and_symbols(
         self,
@@ -103,25 +100,11 @@ class SemanticProjectIndexTests(
             "console.log('hello');\n",
         )
 
-        index = build_semantic_project_index(
-            (
-                app,
-                worker,
-                javascript,
-            )
-        )
+        index = build_semantic_project_index((app, worker, javascript))
 
         self.assertEqual(
-            tuple(
-                parsed.status
-                for parsed
-                in index.parsed_sources
-            ),
-            (
-                ParseStatus.PARSED,
-                ParseStatus.PARSED,
-                ParseStatus.UNSUPPORTED_LANGUAGE,
-            ),
+            tuple(parsed.status for parsed in index.parsed_sources),
+            (ParseStatus.PARSED, ParseStatus.PARSED, ParseStatus.UNSUPPORTED_LANGUAGE),
         )
 
         self.assertIs(
@@ -151,11 +134,7 @@ class SemanticProjectIndexTests(
 
         self.assertEqual(
             tuple(
-                (
-                    item.source_path,
-                    item.evidence.qualified_name,
-                    item.evidence.kind,
-                )
+                (item.source_path, item.evidence.qualified_name, item.evidence.kind)
                 for item in index.symbols
             ),
             (
@@ -217,46 +196,23 @@ class SemanticProjectIndexTests(
             status=FileReadStatus.BINARY,
         )
 
-        index = build_semantic_project_index(
-            (
-                broken,
-                binary,
-            )
-        )
+        index = build_semantic_project_index((broken, binary))
 
         self.assertEqual(
-            tuple(
-                parsed.status
-                for parsed
-                in index.parsed_sources
-            ),
-            (
-                ParseStatus.SYNTAX_ERROR,
-                ParseStatus.NON_TEXT_SOURCE,
-            ),
+            tuple(parsed.status for parsed in index.parsed_sources),
+            (ParseStatus.SYNTAX_ERROR, ParseStatus.NON_TEXT_SOURCE),
         )
 
-        self.assertEqual(
-            index.imports,
-            (),
-        )
+        self.assertEqual(index.imports, ())
 
-        self.assertEqual(
-            index.symbols,
-            (),
-        )
+        self.assertEqual(index.symbols, ())
 
-        self.assertEqual(
-            index.calls,
-            (),
-        )
+        self.assertEqual(index.calls, ())
 
     def test_indexed_call_type_annotation_resolves(
         self,
     ) -> None:
-        annotations = get_type_hints(
-            IndexedCall
-        )
+        annotations = get_type_hints(IndexedCall)
 
         self.assertIs(
             annotations["evidence"],

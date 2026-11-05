@@ -17,13 +17,9 @@ class PersonalRegistryLoaderTests(
     def setUp(
         self,
     ) -> None:
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.project = (
             self.workspace
@@ -70,19 +66,12 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        with self.assertRaises(
-            ConfigurationError
-        ) as raised:
-            load_personal_ignores(
-                project_path=self.project,
-                registry_path=self.registry_path,
-            )
+        with self.assertRaises(ConfigurationError) as raised:
+            load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
         self.assertIn(
             "schema-version-1 per-project format",
-            str(
-                raised.exception
-            ),
+            str(raised.exception),
         )
 
     def test_profile_id_matches_project_root_name(
@@ -108,10 +97,7 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        loaded = load_personal_ignores(
-            project_path=self.project,
-            registry_path=self.registry_path,
-        )
+        loaded = load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
         self.assertEqual(
             loaded[
@@ -142,10 +128,7 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        loaded = load_personal_ignores(
-            project_path=self.project,
-            registry_path=self.registry_path,
-        )
+        loaded = load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
         self.assertEqual(
             loaded[
@@ -176,9 +159,7 @@ class PersonalRegistryLoaderTests(
                         "ROOT_NAME": (
                             "fixture-project"
                         ),
-                        "ROOT_PATH": str(
-                            self.project
-                        ),
+                        "ROOT_PATH": str(self.project),
                         "IGNORE_FOLDERS": [
                             "specific-folder",
                         ],
@@ -188,10 +169,7 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        loaded = load_personal_ignores(
-            project_path=self.project,
-            registry_path=self.registry_path,
-        )
+        loaded = load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
         self.assertEqual(
             loaded[
@@ -219,10 +197,7 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        loaded = load_personal_ignores(
-            project_path=self.project,
-            registry_path=self.registry_path,
-        )
+        loaded = load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
         self.assertEqual(
             loaded,
@@ -257,13 +232,8 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        with self.assertRaises(
-            ConfigurationError
-        ):
-            load_personal_ignores(
-                project_path=self.project,
-                registry_path=self.registry_path,
-            )
+        with self.assertRaises(ConfigurationError):
+            load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
     def test_invalid_schema_version_is_rejected(
         self,
@@ -275,13 +245,8 @@ class PersonalRegistryLoaderTests(
             }
         )
 
-        with self.assertRaises(
-            ConfigurationError
-        ):
-            load_personal_ignores(
-                project_path=self.project,
-                registry_path=self.registry_path,
-            )
+        with self.assertRaises(ConfigurationError):
+            load_personal_ignores(project_path=self.project, registry_path=self.registry_path)
 
     def test_default_registry_lives_in_package_resources(
         self,

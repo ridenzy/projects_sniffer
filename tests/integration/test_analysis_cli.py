@@ -23,13 +23,9 @@ class ProjectSnifferAnalysisCliTests(
     ) -> None:
         self.original_cwd = Path.cwd()
 
-        self.temporary_directory = (
-            tempfile.TemporaryDirectory()
-        )
+        self.temporary_directory = tempfile.TemporaryDirectory()
 
-        self.workspace = Path(
-            self.temporary_directory.name
-        )
+        self.workspace = Path(self.temporary_directory.name)
 
         self.personal_registry_path = (
             self.workspace
@@ -47,9 +43,7 @@ class ProjectSnifferAnalysisCliTests(
 
         self.personal_registry_patcher.start()
 
-        os.chdir(
-            self.workspace
-        )
+        os.chdir(self.workspace)
 
         self.project = (
             self.workspace
@@ -61,9 +55,7 @@ class ProjectSnifferAnalysisCliTests(
             / "src"
         )
 
-        source.mkdir(
-            parents=True
-        )
+        source.mkdir(parents=True)
 
         (
             source
@@ -91,9 +83,7 @@ class ProjectSnifferAnalysisCliTests(
     ) -> None:
         self.personal_registry_patcher.stop()
 
-        os.chdir(
-            self.original_cwd
-        )
+        os.chdir(self.original_cwd)
 
         self.temporary_directory.cleanup()
 
@@ -139,13 +129,9 @@ class ProjectSnifferAnalysisCliTests(
             )
         )
 
-        self.assertTrue(
-            architecture_path.is_file()
-        )
+        self.assertTrue(architecture_path.is_file())
 
-        self.assertTrue(
-            report_path.is_file()
-        )
+        self.assertTrue(report_path.is_file())
 
         self.assertIn(
             "example.py",
@@ -179,14 +165,10 @@ class ProjectSnifferAnalysisCliTests(
         status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
                 "--output",
-                str(
-                    output_base_directory
-                ),
+                str(output_base_directory),
             ]
         )
 
@@ -226,20 +208,12 @@ class ProjectSnifferAnalysisCliTests(
         stdout = io.StringIO()
         stderr = io.StringIO()
 
-        with redirect_stdout(
-            stdout
-        ), redirect_stderr(
-            stderr
-        ):
-            with self.assertRaises(
-                SystemExit
-            ) as raised:
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as raised:
                 main(
                     [
                         "--project",
-                        str(
-                            self.project
-                        ),
+                        str(self.project),
                     ]
                 )
 
@@ -258,9 +232,7 @@ class ProjectSnifferAnalysisCliTests(
     ) -> None:
         stderr = io.StringIO()
 
-        with redirect_stderr(
-            stderr
-        ):
+        with redirect_stderr(stderr):
             status = main(
                 [
                     "--project",
@@ -282,16 +254,12 @@ class ProjectSnifferAnalysisCliTests(
     def test_personal_ignore_file_is_not_auto_created(
         self,
     ) -> None:
-        self.assertFalse(
-            self.personal_registry_path.exists()
-        )
+        self.assertFalse(self.personal_registry_path.exists())
 
         status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
             ]
         )
@@ -301,16 +269,12 @@ class ProjectSnifferAnalysisCliTests(
             0,
         )
 
-        self.assertFalse(
-            self.personal_registry_path.exists()
-        )
+        self.assertFalse(self.personal_registry_path.exists())
 
     def test_existing_project_profile_personal_ignore_is_used(
         self,
     ) -> None:
-        self.personal_registry_path.parent.mkdir(
-            parents=True
-        )
+        self.personal_registry_path.parent.mkdir(parents=True)
 
         self.personal_registry_path.write_text(
             "{\n"
@@ -334,14 +298,10 @@ class ProjectSnifferAnalysisCliTests(
         status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
                 "--output",
-                str(
-                    output_base_directory
-                ),
+                str(output_base_directory),
             ]
         )
 
@@ -391,14 +351,10 @@ class ProjectSnifferAnalysisCliTests(
         status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
                 "--output",
-                str(
-                    output_base_directory
-                ),
+                str(output_base_directory),
             ]
         )
 
@@ -438,13 +394,9 @@ class ProjectSnifferAnalysisCliTests(
             / "private"
         )
 
-        public_docs.mkdir(
-            parents=True
-        )
+        public_docs.mkdir(parents=True)
 
-        private_docs.mkdir(
-            parents=True
-        )
+        private_docs.mkdir(parents=True)
 
         (
             public_docs
@@ -513,9 +465,7 @@ class ProjectSnifferAnalysisCliTests(
             newline="\n",
         )
 
-        self.personal_registry_path.parent.mkdir(
-            parents=True
-        )
+        self.personal_registry_path.parent.mkdir(parents=True)
 
         self.personal_registry_path.write_text(
             "{\n"
@@ -543,20 +493,14 @@ class ProjectSnifferAnalysisCliTests(
         with patch(
             "builtins.input",
             return_value="y",
-        ) as prompt, redirect_stdout(
-            stdout
-        ):
+        ) as prompt, redirect_stdout(stdout):
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--docs",
                     "--output",
-                    str(
-                        output_base
-                    ),
+                    str(output_base),
                 ]
             )
 
@@ -585,13 +529,9 @@ class ProjectSnifferAnalysisCliTests(
             / "fixture-project-private-docs-report.md"
         )
 
-        self.assertTrue(
-            public_report.is_file()
-        )
+        self.assertTrue(public_report.is_file())
 
-        self.assertTrue(
-            private_report.is_file()
-        )
+        self.assertTrue(private_report.is_file())
 
         public_text = public_report.read_text(
             encoding="utf-8"
@@ -678,9 +618,7 @@ class ProjectSnifferAnalysisCliTests(
             / "private"
         )
 
-        private_docs.mkdir(
-            parents=True
-        )
+        private_docs.mkdir(parents=True)
 
         (
             private_docs
@@ -691,9 +629,7 @@ class ProjectSnifferAnalysisCliTests(
             newline="\n",
         )
 
-        self.personal_registry_path.parent.mkdir(
-            parents=True
-        )
+        self.personal_registry_path.parent.mkdir(parents=True)
 
         self.personal_registry_path.write_text(
             "{\n"
@@ -721,20 +657,14 @@ class ProjectSnifferAnalysisCliTests(
         with patch(
             "builtins.input",
             return_value="y",
-        ) as prompt, redirect_stdout(
-            stdout
-        ):
+        ) as prompt, redirect_stdout(stdout):
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--docs",
                     "--output",
-                    str(
-                        output_base
-                    ),
+                    str(output_base),
                 ]
             )
 
@@ -754,9 +684,7 @@ class ProjectSnifferAnalysisCliTests(
             / "fixture-project-private-docs-report.md"
         )
 
-        self.assertTrue(
-            private_report.is_file()
-        )
+        self.assertTrue(private_report.is_file())
 
         self.assertIn(
             "# `notes.md`",
@@ -796,9 +724,7 @@ class ProjectSnifferAnalysisCliTests(
             / "private"
         )
 
-        private_docs.mkdir(
-            parents=True
-        )
+        private_docs.mkdir(parents=True)
 
         (
             private_docs
@@ -809,9 +735,7 @@ class ProjectSnifferAnalysisCliTests(
             newline="\n",
         )
 
-        self.personal_registry_path.parent.mkdir(
-            parents=True
-        )
+        self.personal_registry_path.parent.mkdir(parents=True)
 
         self.personal_registry_path.write_text(
             "{\n"
@@ -839,9 +763,7 @@ class ProjectSnifferAnalysisCliTests(
             / "fixture-project"
         )
 
-        output_directory.mkdir(
-            parents=True
-        )
+        output_directory.mkdir(parents=True)
 
         private_report = (
             output_directory
@@ -854,29 +776,21 @@ class ProjectSnifferAnalysisCliTests(
             newline="\n",
         )
 
-        self.assertTrue(
-            private_report.is_file()
-        )
+        self.assertTrue(private_report.is_file())
 
         stdout = io.StringIO()
 
         with patch(
             "builtins.input",
             return_value="n",
-        ) as prompt, redirect_stdout(
-            stdout
-        ):
+        ) as prompt, redirect_stdout(stdout):
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--docs",
                     "--output",
-                    str(
-                        output_base
-                    ),
+                    str(output_base),
                 ]
             )
 
@@ -890,9 +804,7 @@ class ProjectSnifferAnalysisCliTests(
             "report? [y/N]: "
         )
 
-        self.assertFalse(
-            private_report.exists()
-        )
+        self.assertFalse(private_report.exists())
 
         rendered = stdout.getvalue()
 
@@ -931,20 +843,14 @@ class ProjectSnifferAnalysisCliTests(
 
         stdout = io.StringIO()
 
-        with redirect_stdout(
-            stdout
-        ):
+        with redirect_stdout(stdout):
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--docs",
                     "--output",
-                    str(
-                        output_base
-                    ),
+                    str(output_base),
                 ]
             )
 
@@ -958,9 +864,7 @@ class ProjectSnifferAnalysisCliTests(
             / "fixture-project"
         )
 
-        self.assertTrue(
-            report_directory.is_dir()
-        )
+        self.assertTrue(report_directory.is_dir())
 
         self.assertFalse(
             (
@@ -1004,15 +908,11 @@ class ProjectSnifferAnalysisCliTests(
         first_status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
                 "--report",
                 "--output",
-                str(
-                    output_base
-                ),
+                str(output_base),
             ]
         )
 
@@ -1024,15 +924,11 @@ class ProjectSnifferAnalysisCliTests(
         second_status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
                 "--report",
                 "--output",
-                str(
-                    output_base
-                ),
+                str(output_base),
             ]
         )
 
@@ -1129,15 +1025,11 @@ class ProjectSnifferAnalysisCliTests(
         status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--architecture",
                 "--report",
                 "--output",
-                str(
-                    output_base
-                ),
+                str(output_base),
             ]
         )
 
@@ -1305,14 +1197,10 @@ class ProjectSnifferAnalysisCliTests(
         status = main(
             [
                 "--project",
-                str(
-                    self.project
-                ),
+                str(self.project),
                 "--trace",
                 "--output",
-                str(
-                    output_base
-                ),
+                str(output_base),
             ]
         )
 
@@ -1331,9 +1219,7 @@ class ProjectSnifferAnalysisCliTests(
             / "fixture-project-trace.md"
         )
 
-        self.assertTrue(
-            trace_path.is_file()
-        )
+        self.assertTrue(trace_path.is_file())
 
         trace_text = trace_path.read_text(
             encoding="utf-8"
@@ -1382,15 +1268,11 @@ class ProjectSnifferAnalysisCliTests(
             status = main(
                 [
                     "--project",
-                    str(
-                        self.project
-                    ),
+                    str(self.project),
                     "--report",
                     "--trace",
                     "--output",
-                    str(
-                        output_base
-                    ),
+                    str(output_base),
                 ]
             )
 

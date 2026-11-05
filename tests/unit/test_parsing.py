@@ -64,29 +64,16 @@ class ParsingTests(
             is_symlink=False,
         )
 
-        return SourceEvidence(
-            read_result=result,
-            language=language,
-        )
+        return SourceEvidence(read_result=result, language=language)
 
     def test_initial_registry_supports_python(
         self,
     ) -> None:
-        definition = (
-            get_parser_definition(
-                SourceLanguage.PYTHON
-            )
-        )
+        definition = get_parser_definition(SourceLanguage.PYTHON)
 
-        self.assertIsNotNone(
-            definition
-        )
+        self.assertIsNotNone(definition)
 
-        self.assertIsNone(
-            get_parser_definition(
-                SourceLanguage.JAVASCRIPT
-            )
-        )
+        self.assertIsNone(get_parser_definition(SourceLanguage.JAVASCRIPT))
 
     def test_unsupported_language_is_explicit(
         self,
@@ -97,25 +84,13 @@ class ParsingTests(
             "console.log('hello');\n",
         )
 
-        parsed = (
-            parse_source_evidence(
-                evidence
-            )
-        )
+        parsed = parse_source_evidence(evidence)
 
-        self.assertIs(
-            parsed.source,
-            evidence,
-        )
+        self.assertIs(parsed.source, evidence)
 
-        self.assertIs(
-            parsed.status,
-            ParseStatus.UNSUPPORTED_LANGUAGE,
-        )
+        self.assertIs(parsed.status, ParseStatus.UNSUPPORTED_LANGUAGE)
 
-        self.assertIsNone(
-            parsed.parser_id
-        )
+        self.assertIsNone(parsed.parser_id)
 
     def test_non_text_source_is_not_parsed(
         self,
@@ -127,16 +102,9 @@ class ParsingTests(
             status=FileReadStatus.BINARY,
         )
 
-        parsed = (
-            parse_source_evidence(
-                evidence
-            )
-        )
+        parsed = parse_source_evidence(evidence)
 
-        self.assertIs(
-            parsed.status,
-            ParseStatus.NON_TEXT_SOURCE,
-        )
+        self.assertIs(parsed.status, ParseStatus.NON_TEXT_SOURCE)
 
     def test_invalid_text_evidence_is_explicit(
         self,
@@ -147,16 +115,9 @@ class ParsingTests(
             None,
         )
 
-        parsed = (
-            parse_source_evidence(
-                evidence
-            )
-        )
+        parsed = parse_source_evidence(evidence)
 
-        self.assertIs(
-            parsed.status,
-            ParseStatus.INVALID_TEXT_EVIDENCE,
-        )
+        self.assertIs(parsed.status, ParseStatus.INVALID_TEXT_EVIDENCE)
 
     def test_python_syntax_error_is_evidence(
         self,
@@ -170,16 +131,9 @@ class ParsingTests(
             ),
         )
 
-        parsed = (
-            parse_source_evidence(
-                evidence
-            )
-        )
+        parsed = parse_source_evidence(evidence)
 
-        self.assertIs(
-            parsed.status,
-            ParseStatus.SYNTAX_ERROR,
-        )
+        self.assertIs(parsed.status, ParseStatus.SYNTAX_ERROR)
 
         self.assertEqual(
             parsed.error_type,
@@ -214,16 +168,9 @@ class ParsingTests(
             source,
         )
 
-        parsed = (
-            parse_source_evidence(
-                evidence
-            )
-        )
+        parsed = parse_source_evidence(evidence)
 
-        self.assertIs(
-            parsed.status,
-            ParseStatus.PARSED,
-        )
+        self.assertIs(parsed.status, ParseStatus.PARSED)
 
         self.assertEqual(
             parsed.parser_id,
@@ -231,14 +178,7 @@ class ParsingTests(
         )
 
         imports = tuple(
-            (
-                item.module,
-                item.imported_name,
-                item.alias,
-                item.level,
-                item.scope,
-                item.line,
-            )
+            (item.module, item.imported_name, item.alias, item.level, item.scope, item.line)
             for item in parsed.imports
         )
 
@@ -281,12 +221,7 @@ class ParsingTests(
         )
 
         symbols = tuple(
-            (
-                item.name,
-                item.qualified_name,
-                item.kind,
-                item.line,
-            )
+            (item.name, item.qualified_name, item.kind, item.line)
             for item in parsed.symbols
         )
 
@@ -330,19 +265,10 @@ class ParsingTests(
             source,
         )
 
-        parsed = (
-            parse_source_evidence(
-                evidence
-            )
-        )
+        parsed = parse_source_evidence(evidence)
 
         calls = tuple(
-            (
-                item.target_kind,
-                item.target_parts,
-                item.scope,
-                item.line,
-            )
+            (item.target_kind, item.target_parts, item.scope, item.line)
             for item in parsed.calls
         )
 
@@ -403,8 +329,7 @@ class ParsingTests(
             item.dynamic_kind
             for item in parsed.calls
             if (
-                item.target_kind
-                is CallTargetKind.DYNAMIC
+                item.target_kind is CallTargetKind.DYNAMIC
             )
         )
 
