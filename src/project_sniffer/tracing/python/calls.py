@@ -264,126 +264,67 @@ def _call_executes_during_module_initialization(
     function and lambda bodies are treated as deferred because their invocation
     timing is not proven at this stage.
     """
-
     if tree is None:
         return False
 
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
-
-    for node in ast.walk(
-        tree
-    ):
+    parent_by_child = _ast_parent_map(tree)
+    for node in ast.walk(tree):
         if (
-            not isinstance(
-                node,
-                ast.Call,
-            )
+            not isinstance(node, ast.Call)
             or node.lineno != call_line
-            or not isinstance(
-                node.func,
-                ast.Name,
-            )
+            or not isinstance(node.func, ast.Name)
             or node.func.id != target_name
         ):
             continue
 
         child: ast.AST = node
-        parent = parent_by_child.get(
-            node
-        )
+        parent = parent_by_child.get(node)
         deferred = False
 
         while parent is not None:
-            if isinstance(
-                parent,
-                (
-                    ast.FunctionDef,
-                    ast.AsyncFunctionDef,
-                ),
-            ):
-                if any(
-                    child is statement
-                    for statement in parent.body
-                ):
+            if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if any(child is statement for statement in parent.body):
                     deferred = True
                     break
 
-            if (
-                isinstance(
-                    parent,
-                    ast.Lambda,
-                )
-                and child is parent.body
-            ):
+            if isinstance(parent, ast.Lambda) and child is parent.body:
                 deferred = True
                 break
 
             child = parent
-            parent = parent_by_child.get(
-                parent
-            )
+            parent = parent_by_child.get(parent)
 
         if not deferred:
             return True
 
     return False
 
-def _lambda_binds_name(
-    node: ast.Lambda,
-    name: str,
-) -> bool:
-    arguments = node.args
 
-    for argument in (
-        *arguments.posonlyargs,
-        *arguments.args,
-        *arguments.kwonlyargs,
-    ):
+def _lambda_binds_name(node: ast.Lambda, name: str) -> bool:
+    arguments = node.args
+    for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs):
         if argument.arg == name:
             return True
 
-    if (
-        arguments.vararg is not None
-        and arguments.vararg.arg == name
-    ):
+    if arguments.vararg is not None and arguments.vararg.arg == name:
         return True
 
-    if (
-        arguments.kwarg is not None
-        and arguments.kwarg.arg == name
-    ):
+    if arguments.kwarg is not None and arguments.kwarg.arg == name:
         return True
 
     return False
 
 
 def _comprehension_binds_name(
-    node: (
-        ast.ListComp
-        | ast.SetComp
-        | ast.DictComp
-        | ast.GeneratorExp
-    ),
+    node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp,
     name: str,
 ) -> bool:
     for generator in node.generators:
-        for target in ast.walk(
-            generator.target
-        ):
+        for target in ast.walk(generator.target):
             if (
-                isinstance(
-                    target,
-                    ast.Name,
-                )
+                isinstance(target, ast.Name)
                 and target.id == name
-                and isinstance(
-                    target.ctx,
-                    ast.Store,
-                )
+                and isinstance(target.ctx, ast.Store)
             ):
                 return True
 
@@ -401,110 +342,52 @@ def _call_has_unmodeled_scope_shadow(
     under a lambda or comprehension binding that CallEvidence.scope does not
     currently represent.
     """
-
     if tree is None:
         return False
 
-    parent_by_child = (
-        _ast_parent_map(
-            tree
-        )
-    )
-
-    for node in ast.walk(
-        tree
-    ):
-        if not isinstance(
-            node,
-            ast.Call,
-        ):
+    parent_by_child = _ast_parent_map(tree)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
             continue
-
         if node.lineno != call_line:
             continue
-
-        if (
-            not isinstance(
-                node.func,
-                ast.Name,
-            )
-            or node.func.id != target_name
-        ):
+        if not isinstance(node.func, ast.Name) or node.func.id != target_name:
             continue
 
-        parent = parent_by_child.get(
-            node
-        )
-
+        parent = parent_by_child.get(node)
         while parent is not None:
             if (
-                isinstance(
-                    parent,
-                    ast.Lambda,
-                )
-                and _lambda_binds_name(
-                    parent,
-                    target_name,
-                )
+                isinstance(parent, ast.Lambda)
+                and _lambda_binds_name(parent, target_name)
             ):
                 return True
 
             if (
                 isinstance(
-                    parent,
-                    (
-                        ast.ListComp,
-                        ast.SetComp,
-                        ast.DictComp,
-                        ast.GeneratorExp,
-                    ),
+                    parent, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
                 )
-                and _comprehension_binds_name(
-                    parent,
-                    target_name,
-                )
+                and _comprehension_binds_name(parent, target_name)
             ):
                 return True
 
-            parent = parent_by_child.get(
-                parent
-            )
+            parent = parent_by_child.get(parent)
 
     return False
 
 
 def _executes_in_module_scope(
     node: ast.AST,
-    parent_by_child: dict[
-        ast.AST,
-        ast.AST,
-    ],
+    parent_by_child: dict[ast.AST, ast.AST],
 ) -> bool:
-    parent = parent_by_child.get(
-        node
-    )
-
+    parent = parent_by_child.get(node)
     while parent is not None:
         if isinstance(
-            parent,
-            (
-                ast.FunctionDef,
-                ast.AsyncFunctionDef,
-                ast.Lambda,
-                ast.ClassDef,
-            ),
+            parent, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
         ):
             return False
-
-        if isinstance(
-            parent,
-            ast.Module,
-        ):
+        if isinstance(parent, ast.Module):
             return True
-
-        parent = parent_by_child.get(
-            parent
-        )
+        parent = parent_by_child.get(parent)
 
     return False
 
