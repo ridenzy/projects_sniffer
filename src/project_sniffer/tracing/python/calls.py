@@ -166,75 +166,33 @@ def _confirmed_import_target(
     call_scope: str | None,
     call_line: int,
     call_executes_during_module_initialization: bool,
-    ordered_candidates: tuple[
-        CallTarget,
-        ...,
-    ],
-    imported_bindings: Sequence[
-        tuple[
-            ImportResolution,
-            CallTarget,
-        ]
-    ],
-) -> tuple[
-    CallTarget | None,
-    CallResolutionProof | None,
-]:
-    if len(
-        ordered_candidates
-    ) != 1:
+    ordered_candidates: tuple[CallTarget, ...],
+    imported_bindings: Sequence[tuple[ImportResolution, CallTarget]],
+) -> tuple[CallTarget | None, CallResolutionProof | None]:
+    if len(ordered_candidates) != 1:
         return None, None
 
     target = ordered_candidates[0]
-
     matching_bindings = tuple(
-        (
-            resolution,
-            candidate,
-        )
-        for (
-            resolution,
-            candidate,
-        )
-        in imported_bindings
+        (resolution, candidate)
+        for resolution, candidate in imported_bindings
         if candidate == target
     )
 
-    if len(
-        matching_bindings
-    ) != 1:
+    if len(matching_bindings) != 1:
         return None, None
 
-    resolution, _ = (
-        matching_bindings[0]
-    )
-
-    binding_scope = (
-        resolution.evidence.scope
-    )
-
+    resolution, _ = matching_bindings[0]
+    binding_scope = resolution.evidence.scope
     binding_must_precede_call = (
         binding_scope == call_scope
-        or (
-            binding_scope is None
-            and (
-                call_executes_during_module_initialization
-            )
-        )
+        or (binding_scope is None and call_executes_during_module_initialization)
     )
 
-    if (
-        binding_must_precede_call
-        and resolution.evidence.line
-        >= call_line
-    ):
+    if binding_must_precede_call and resolution.evidence.line >= call_line:
         return None, None
 
-    symbol = _binding_symbol(
-        root,
-        resolution.evidence.scope,
-        target_name,
-    )
+    symbol = _binding_symbol(root, resolution.evidence.scope, target_name)
 
     if symbol is None:
         return None, None
@@ -250,13 +208,8 @@ def _confirmed_import_target(
     ):
         return None, None
 
-    return (
-        target,
-        (
-            CallResolutionProof
-            .INTERNAL_IMPORT_BINDING
-        ),
-    )
+    return (target, CallResolutionProof.INTERNAL_IMPORT_BINDING)
+
 
 def _python_syntax_trees_by_path(
     index: SemanticProjectIndex,
@@ -267,64 +220,34 @@ def _python_syntax_trees_by_path(
     This performs no filesystem reads and does not execute target code.
     """
 
-    trees: dict[
-        str,
-        ast.Module,
-    ] = {}
+    trees: dict[str, ast.Module] = {}
 
     for parsed in index.parsed_sources:
-        if (
-            parsed.source.language
-            is not SourceLanguage.PYTHON
-        ):
+        if parsed.source.language is not SourceLanguage.PYTHON:
             continue
 
-        content = (
-            parsed
-            .source
-            .read_result
-            .content
-        )
+        content = parsed.source.read_result.content
 
         if content is None:
             continue
 
-        source_path = (
-            parsed
-            .source
-            .read_result
-            .scanned_file
-            .relative_path
-        )
+        source_path = parsed.source.read_result.scanned_file.relative_path
 
         try:
-            trees[source_path] = (
-                ast.parse(
-                    content,
-                    filename=source_path,
-                    type_comments=True,
-                )
+            trees[source_path] = ast.parse(
+                content, filename=source_path, type_comments=True
             )
-
         except SyntaxError:
             continue
 
     return trees
 
-def _ast_parent_map(
-    tree: ast.AST,
-) -> dict[
-    ast.AST,
-    ast.AST,
-]:
+
+def _ast_parent_map(tree: ast.AST) -> dict[ast.AST, ast.AST]:
     return {
         child: parent
-        for parent in ast.walk(
-            tree
-        )
-        for child in ast.iter_child_nodes(
-            parent
-        )
+        for parent in ast.walk(tree)
+        for child in ast.iter_child_nodes(parent)
     }
 
 def _call_executes_during_module_initialization(
