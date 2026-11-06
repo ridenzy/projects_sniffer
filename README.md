@@ -197,3 +197,9 @@ For security disclosures, see [Security policy](SECURITY.md).
 
 For participation expectations and reporting limitations, see
 [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Branding and name use
+
+The MIT-licensed core may be forked, modified, redistributed, and used
+commercially. See [Branding and name use](TRADEMARKS.md) for guidance on
+accurate attribution and distinguishing unofficial distributions.

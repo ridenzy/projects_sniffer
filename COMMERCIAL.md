@@ -43,8 +43,8 @@ Project Sniffer core code.
 
 The MIT License covers the applicable software and documentation; it should
 not be read as permission to present an unofficial fork, service, or product as
-an official Project Sniffer release. A separate, reviewed branding policy is
-planned.
+an official Project Sniffer release. See [Branding and name use](TRADEMARKS.md)
+for guidance on official identity and third-party projects.
 
 ## Project boundaries
 
