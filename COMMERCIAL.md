@@ -25,7 +25,9 @@ The project may offer separately agreed professional work, including:
 - **Professional or enterprise support:** agreed troubleshooting, maintenance,
   compatibility assistance, and response expectations.
 
-These are the possible service categories.
+These are the possible service categories. 
+
+for discussions you can reach out to ridthedev@gmail.com, do specify your inquiry.
 
 ## Ownership and delivery terms
 
@@ -48,7 +50,7 @@ for guidance on official identity and third-party projects.
 
 ## Project boundaries
 
-Official commercial work must not silently change the core's documented local-first,
+Official commercial work must also not silently change the core's documented local-first,
 read-only, non-executing analysis principles or turn uncertain relationships
 into confirmed results. Features outside those boundaries require explicit
 scope and safety review.
