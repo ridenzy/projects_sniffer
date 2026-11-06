@@ -91,11 +91,15 @@ sniff
  +-- --architecture
  +-- --report
  +-- --trace
+ +-- --services
+ +-- --json-schema
  +-- --secret
  +-- --database
 ```
 
-`--all` will select all stable static analyzers.
+These seven analyzers form the planned 1.0 target, not the current CLI surface.
+`--workspace`, `--config`, and `--remote` are also planned for the 1.0 CLI.
+Future `--all` orchestration is not implemented in the current CLI.
 
 ## Current analysis and documentation pipelines
 

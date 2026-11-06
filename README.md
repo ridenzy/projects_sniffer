@@ -96,7 +96,7 @@ is implemented for them.
 
 ## Project Sniffer 1.0 scope
 
-The stable 1.0 command is planned to support five analyzers:
+The planned stable 1.0 analyzer surface includes seven static analyzers:
 
 ```text
 --architecture
@@ -108,6 +108,12 @@ The stable 1.0 command is planned to support five analyzers:
 --trace
     Imports, exports, calls, routes, APIs, file operations, and application flow.
 
+--services
+    Static service, job, process-manager, and startup relationships.
+
+--json-schema
+    JSON structure, usage, and mutation paths without exposing scalar values.
+
 --secret
     Secret-bearing file, configuration, and credential-risk review.
 
@@ -115,7 +121,11 @@ The stable 1.0 command is planned to support five analyzers:
     Static schema, migration, query, ORM, and persistence analysis.
 ```
 
-`--all` will run all stable static analyzers.
+These are planned 1.0 capabilities, not all currently implemented. Additional
+planned CLI capabilities include `--workspace`, `--config`, and `--remote`.
+
+`--all` is reserved for a future stable-analyzer orchestration capability; it
+is not implemented in the current CLI.
 
 `--docs` is intentionally separate from that analyzer set. It performs scoped
 documentation scans only for root-level `docs/public/` and `docs/private/`
