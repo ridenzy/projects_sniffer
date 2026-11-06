@@ -1,5 +1,7 @@
 # Project Sniffer
 
+![Logo](projects-snifferL.png)
+
 Project Sniffer is a local-first, read-only repository-intelligence tool for
 understanding software projects without executing the target application's
 code.
