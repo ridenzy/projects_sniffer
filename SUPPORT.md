@@ -1,0 +1,36 @@
+# Support
+
+Project Sniffer is in pre-1.0 development. Its MIT-licensed core may be used
+without a support contract; the license does not provide a support guarantee.
+
+## Self-service
+
+- Start with [README.md](README.md) and `sniff --help` for CLI usage.
+- Consult [public architecture documentation](docs/public/architecture.md)
+  and [language support](docs/public/language-support.md) for current limits.
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes.
+
+## Non-sensitive bugs and questions
+
+If the repository's GitHub issue tracker is available, use it for reproducible
+bugs, documentation corrections, and feature requests. Include the installed
+CLI version, relevant OS and Python versions, expected and actual behavior,
+and a minimal synthetic reproduction where practical.
+
+Never attach confidential project source, full private reports, credentials, or
+other sensitive material to an issue or pull request. Public issue discussion
+is community support, not a help desk: responses, fixes, and release dates
+are not guaranteed.
+
+## Security and confidential matters
+
+Do not disclose vulnerabilities or secrets in public issues or discussions.
+A verified private vulnerability-reporting route and a dedicated security
+policy are still to be established; this document does not present a public
+issue as a confidential reporting channel.
+
+## Optional professional services
+
+Possible paid assistance is described in [COMMERCIAL.md](COMMERCIAL.md).
+Availability, scope, fees, and response commitments require a separate
+agreement; community support does not imply an enterprise support contract.

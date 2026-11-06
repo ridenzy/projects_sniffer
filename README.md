@@ -185,3 +185,8 @@ Project Sniffer is licensed under the MIT License. See `LICENSE`.
 The Project Sniffer core remains freely usable under MIT. Optional paid
 services and separately licensed specialist work are described in
 [Commercial work and licensing](COMMERCIAL.md).
+
+## Support and maintainer governance
+
+For non-sensitive support guidance and maintainer responsibilities, see
+[Support](SUPPORT.md) and [Maintainer governance](MAINTAINERS.md).
