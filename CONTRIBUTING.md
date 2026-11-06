@@ -196,6 +196,11 @@ Keep unrelated refactors out of focused changes where practical.
 Do not publish real credentials, private keys, tokens, environment values, or
 other secret material in examples, issues, patches, tests, or screenshots.
 
-The final public security-reporting channel and community enforcement contact
-will be published before Project Sniffer opens for general public
-contributions.
+Follow [SECURITY.md](SECURITY.md) for vulnerability reporting guidance. Never
+publish sensitive vulnerability details in issues or pull requests.
+
+## Community conduct
+
+Contributors should follow [Code of Conduct](CODE_OF_CONDUCT.md).
+A confidential maintainer conduct-reporting channel has not yet been
+published; do not post sensitive reports in public issues or pull requests.
