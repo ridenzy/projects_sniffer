@@ -190,3 +190,5 @@ services and separately licensed specialist work are described in
 
 For non-sensitive support guidance and maintainer responsibilities, see
 [Support](SUPPORT.md) and [Maintainer governance](MAINTAINERS.md).
+
+For security disclosures, see [Security policy](SECURITY.md).

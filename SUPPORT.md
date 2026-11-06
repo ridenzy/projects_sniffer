@@ -24,10 +24,10 @@ are not guaranteed.
 
 ## Security and confidential matters
 
-Do not disclose vulnerabilities or secrets in public issues or discussions.
-A verified private vulnerability-reporting route and a dedicated security
-policy are still to be established; this document does not present a public
-issue as a confidential reporting channel.
+Follow [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.
+Do not disclose sensitive details in public issues or discussions. If
+private reporting is unavailable, request a secure contact method without
+revealing vulnerability details.
 
 ## Optional professional services
 
