@@ -38,14 +38,8 @@ and descriptions of compatibility. Avoid presenting any Project Sniffer logo or
 visual identity as the primary branding of an unrelated or unofficial service
 in a way that could confuse users about who maintains it.
 
-This document does not assert that the project name or any logo is a registered
-trademark, establish exclusive rights, or claim that a particular brand asset
-has been legally cleared. Any actual rights depend on applicable law and the
-asset's own licensing and ownership circumstances.
-
 For a proposed official collaboration or co-branded offering, request a
 suitable contact method through a non-sensitive repository issue if the issue
-tracker is available. Such requests do not limit ordinary MIT-licensed use or
-truthful references, and silence does not establish official endorsement.
+tracker is available.
 
 For optional professional services, see [COMMERCIAL.md](COMMERCIAL.md).

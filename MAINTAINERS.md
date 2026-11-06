@@ -12,7 +12,7 @@ Repository permissions determine who can approve and merge changes or publish
 releases. Submitting a contribution, sponsoring development, or purchasing
 services does not by itself grant repository permissions or maintainer status.
 
-Maintainer work includes reviewing changes for correctness and safety,
+Maintainers work includes reviewing changes for correctness and safety,
 protecting private material, keeping public documentation consistent with the
 runtime, checking tests and DCO sign-offs, and deciding when a change is ready
 to merge or release. Reviews and responses are handled as capacity permits.
@@ -26,18 +26,16 @@ The MIT license of already-published core code is not withdrawn by a
 maintenance decision or a separate commercial agreement.
 
 Release decisions must distinguish implemented behavior from planned features;
-no stable 1.0 release or service-level commitment is implied by this policy.
+no stable 1.0 release or service-level commitment is currenly implied by this policy.
 
 ## Security, conduct, and commercial boundaries
 
 Do not submit private vulnerability details, secrets, or confidential project
 reports through public contribution channels. Follow [SECURITY.md](SECURITY.md)
-and verify that private reporting is enabled before describing it as
-available.
+for guidance on private reporting.
 
 Maintainer moderation standards and reporting limitations are described in
 [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Commercial service categories and ownership terms are described separately in
-[COMMERCIAL.md](COMMERCIAL.md). Paid work does not automatically override core
-safety, contribution, review, or licensing rules.
+[COMMERCIAL.md](COMMERCIAL.md).

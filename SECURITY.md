@@ -13,9 +13,7 @@ reports, or confidential source in public issues, pull requests, or discussions.
 
 If GitHub shows **Report a vulnerability** on the
 [repository advisories page](https://github.com/ridenzy/projects_sniffer/security/advisories),
-use it to send a private report. This option works only when the repository
-owner has enabled private vulnerability reporting; this policy alone does not
-enable that GitHub feature.
+use it to send a private report.
 
 If the private-reporting control is unavailable, open a
 [non-sensitive issue](https://github.com/ridenzy/projects_sniffer/issues)

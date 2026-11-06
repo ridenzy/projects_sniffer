@@ -14,8 +14,8 @@ time, privacy, and experience. Protect confidential project information.
 
 ## Unacceptable conduct
 
-Harassment, threats, discrimination, targeted insults, sexual harassment,
-stalking, doxxing, disclosure of private information without permission,
+Harassment, threats, discrimination, targeted insults, stalking, doxxing, 
+disclosure of private information without permission,
 retaliation against people raising concerns, and persistent disruptive or
 abusive behavior are not acceptable. Disagreement or technical criticism alone
 is not misconduct.
@@ -28,8 +28,9 @@ material and do not include personal details or confidential evidence.
 
 If a report requires confidential details, do not publish them in an issue,
 pull request, or discussion. A verified private conduct-reporting channel for
-Project Sniffer maintainers has not yet been published. GitHub's own abuse
-reporting controls, where available, are handled by GitHub and are not a
+Project Sniffer maintainers has not yet been published. 
+
+GitHub's own abuse reporting controls, where available, are handled by GitHub and are not a
 private reporting route to Project Sniffer maintainers.
 
 Security vulnerabilities belong under [SECURITY.md](SECURITY.md); GitHub's
@@ -42,8 +43,7 @@ issue warnings, hide or remove inappropriate content, lock discussions, or
 restrict participation. Actions should consider severity, context, and repeated
 behavior. They may also refer platform-rule violations to GitHub.
 
-The project does not promise a response deadline, a dedicated moderation team,
-or a confidential appeal process. Non-sensitive requests for reconsideration
+Non-sensitive requests for reconsideration
 may be raised through an appropriate repository issue. Do not publish private
 reporting details to seek an appeal.
 
