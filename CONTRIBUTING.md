@@ -198,4 +198,9 @@ other secret material in examples, issues, patches, tests, or screenshots.
 
 Follow [SECURITY.md](SECURITY.md) for vulnerability reporting guidance. Never
 publish sensitive vulnerability details in issues or pull requests.
-Community enforcement contacts remain a separate governance task.
+
+## Community conduct
+
+Contributors should follow [Code of Conduct](CODE_OF_CONDUCT.md).
+A confidential maintainer conduct-reporting channel has not yet been
+published; do not post sensitive reports in public issues or pull requests.

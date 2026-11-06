@@ -33,7 +33,10 @@ no stable 1.0 release or service-level commitment is implied by this policy.
 Do not submit private vulnerability details, secrets, or confidential project
 reports through public contribution channels. Follow [SECURITY.md](SECURITY.md)
 and verify that private reporting is enabled before describing it as
-available. Community conduct arrangements remain a separate governance task.
+available.
+
+Maintainer moderation standards and reporting limitations are described in
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 Commercial service categories and ownership terms are described separately in
 [COMMERCIAL.md](COMMERCIAL.md). Paid work does not automatically override core

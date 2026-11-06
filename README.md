@@ -192,3 +192,8 @@ For non-sensitive support guidance and maintainer responsibilities, see
 [Support](SUPPORT.md) and [Maintainer governance](MAINTAINERS.md).
 
 For security disclosures, see [Security policy](SECURITY.md).
+
+## Community conduct
+
+For participation expectations and reporting limitations, see
+[Code of Conduct](CODE_OF_CONDUCT.md).
