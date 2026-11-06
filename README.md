@@ -179,3 +179,9 @@ Certificate of Origin 1.1 sign-off and should be committed with `git commit -s`.
 ## License
 
 Project Sniffer is licensed under the MIT License. See `LICENSE`.
+
+## Commercial work and licensing
+
+The Project Sniffer core remains freely usable under MIT. Optional paid
+services and separately licensed specialist work are described in
+[Commercial work and licensing](COMMERCIAL.md).
