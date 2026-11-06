@@ -38,6 +38,11 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 
+[project.urls]
+Repository = "https://github.com/ridenzy/projects_sniffer"
+Issues = "https://github.com/ridenzy/projects_sniffer/issues"
+Documentation = "https://github.com/ridenzy/projects_sniffer/tree/main/docs/public"
+
 [project.scripts]
 sniff = "project_sniffer.cli:main"
 
